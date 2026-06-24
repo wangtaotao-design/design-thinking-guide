@@ -1,0 +1,1285 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>以用户旅程为核心的轻量化设计思维方法</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg-elevated: #13161f;
+  --bg-card: #181c28;
+  --border: #1e2333;
+  --border-strong: #2a3045;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-tertiary: #555d6b;
+  --accent: #4d8fff;
+  --accent-2: #78b8ff;
+  --accent-3: #b0d6ff;
+  --accent-blue: #78b8ff;
+  --accent-green: #34d399;
+  --accent-purple: #a78bfa;
+  --accent-orange: #f59e0b;
+  --accent-cyan: #22d3ee;
+  --accent-pink: #f472b6;
+  --accent-sky: #4dc8ff;
+  --grad-accent: linear-gradient(135deg, #78b8ff 0%, #4dc8ff 40%, #34d399 100%);
+  --grad-bg: radial-gradient(ellipse at 30% 20%, rgba(77, 143, 255, 0.12) 0%, transparent 55%),
+              radial-gradient(ellipse at 70% 60%, rgba(77, 200, 255, 0.08) 0%, transparent 55%);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Space Grotesk', SFMono-Regular, monospace;
+  --ease: cubic-bezier(.4, 0, .2, 1);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  position: relative;
+}
+
+/* Mouse glow effect */
+.mouse-glow {
+  position: fixed;
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  background: radial-gradient(circle, rgba(120, 184, 255, 0.6) 0%, rgba(77, 143, 255, 0.3) 40%, transparent 70%);
+  pointer-events: none;
+  z-index: 9999;
+  transform: translate(-50%, -50%);
+  transition: opacity 0.15s ease, width 0.15s ease, height 0.15s ease;
+  box-shadow: 0 0 20px rgba(120, 184, 255, 0.4), 0 0 40px rgba(77, 143, 255, 0.2);
+}
+
+.mouse-glow.hovering {
+  width: 30px;
+  height: 30px;
+  background: radial-gradient(circle, rgba(120, 184, 255, 0.8) 0%, rgba(77, 143, 255, 0.4) 40%, transparent 70%);
+  box-shadow: 0 0 30px rgba(120, 184, 255, 0.6), 0 0 60px rgba(77, 143, 255, 0.3);
+}
+
+/* Custom tooltip */
+.custom-tooltip {
+  position: fixed;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: 8px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 500;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.4);
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(8px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+  white-space: nowrap;
+}
+
+.custom-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+/* Background decorations */
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 1400px 1000px at -5% 5%, rgba(78, 143, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse 900px 700px at 95% 45%, rgba(167, 139, 250, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 600px 500px at 50% 95%, rgba(52, 211, 153, 0.08) 0%, transparent 50%);
+}
+
+/* Grid lines */
+.grid-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(120, 184, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 184, 255, 0.08) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 100%);
+}
+
+/* ========== RIGHT SIDE ANCHOR NAV ========== */
+.side-nav {
+  position: fixed;
+  right: 24px;
+  top: 50%;
+  transform: translateY(-50%);
+  z-index: 90;
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+.side-nav a {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 8px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--text-tertiary);
+  text-decoration: none;
+  border-radius: 8px;
+  transition: all 0.3s var(--ease);
+  position: relative;
+  white-space: nowrap;
+}
+.side-nav a::before {
+  content: '';
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--text-tertiary);
+  transition: all 0.3s var(--ease);
+  flex-shrink: 0;
+}
+.side-nav a:hover {
+  color: var(--text-primary);
+  background: rgba(77, 143, 255, 0.08);
+}
+.side-nav a:hover::before {
+  background: var(--accent-2);
+  box-shadow: 0 0 8px rgba(120, 184, 255, 0.5);
+}
+.side-nav a.active {
+  color: var(--accent-3);
+}
+.side-nav a.active::before {
+  background: var(--accent-2);
+  box-shadow: 0 0 10px rgba(120, 184, 255, 0.6);
+  width: 8px;
+  height: 8px;
+  margin-left: -1px;
+}
+
+/* Navigation */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { font-size: 14px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
+.nav-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px rgba(120, 184, 255, 0.5); }
+.nav-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-3); background: rgba(77, 143, 255, 0.12); border: 1px solid rgba(120, 184, 255, 0.25); padding: 4px 14px; border-radius: 999px; }
+
+/* Hero */
+.hero { position: relative; z-index: 1; padding: 160px 40px 100px; text-align: center; max-width: 900px; margin: 0 auto; }
+.hero-badge { display: inline-flex; align-items: center; gap: 10px; font-size: 12px; font-weight: 600; letter-spacing: 0.12em; text-transform: uppercase; color: var(--accent-3); background: linear-gradient(135deg, rgba(77, 143, 255, 0.15) 0%, rgba(139, 92, 246, 0.1) 100%); border: 1px solid rgba(120, 184, 255, 0.3); padding: 8px 22px; border-radius: 999px; margin-bottom: 32px; box-shadow: 0 4px 16px rgba(77, 143, 255, 0.12), inset 0 1px 0 rgba(255, 255, 255, 0.2); transition: all 0.3s ease; cursor: default; }
+.hero-badge:hover { transform: translateY(-2px); background: linear-gradient(135deg, rgba(77, 143, 255, 0.22) 0%, rgba(139, 92, 246, 0.15) 100%); box-shadow: 0 8px 24px rgba(77, 143, 255, 0.18), inset 0 1px 0 rgba(255, 255, 255, 0.3); border-color: rgba(120, 184, 255, 0.45); }
+.hero-badge-dot { width: 6px; height: 6px; border-radius: 50%; background: var(--accent-green); box-shadow: 0 0 8px rgba(52, 211, 153, 0.5); animation: pulse-dot 2s ease-in-out infinite; }
+@keyframes pulse-dot { 0%, 100% { opacity: 1; } 50% { opacity: 0.4; } }
+.hero h1 { font-size: 56px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 20px; background: linear-gradient(135deg, #78b8ff 0%, #4d8fff 30%, #8b5cf6 80%, #a78bfa 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.hero-subtitle { font-size: 18px; color: var(--text-secondary); line-height: 1.7; max-width: 680px; margin: 0 auto; font-weight: 400; }
+.highlight-template { color: var(--accent-3); }
+
+/* Content */
+.content-wrapper { position: relative; z-index: 1; max-width: 960px; margin: 0 auto; padding: 0 40px 100px; }
+
+/* Section */
+.section { margin-bottom: 72px; }
+.section-number { font-family: var(--font-mono); font-size: 13px; font-weight: 500; color: var(--accent-2); letter-spacing: 0.06em; margin-bottom: 8px; }
+.section h2 { font-size: 36px; font-weight: 700; line-height: 1.2; letter-spacing: -0.015em; margin-bottom: 12px; color: var(--text-primary); }
+.section h3 { font-size: 24px; font-weight: 600; line-height: 1.3; margin: 36px 0 16px; color: var(--text-primary); padding-left: 16px; border-left: 3px solid var(--accent); }
+.section p { color: var(--text-secondary); font-size: 15px; line-height: 1.8; margin-bottom: 14px; }
+.section ul, .section ol { color: var(--text-secondary); font-size: 15px; line-height: 1.8; padding-left: 24px; margin-bottom: 14px; }
+.section li { margin-bottom: 6px; }
+.section strong { color: var(--text-primary); font-weight: 600; }
+
+/* Template intro */
+.template-intro {
+  background: linear-gradient(135deg, rgba(77, 143, 255, 0.08) 0%, rgba(52, 211, 153, 0.06) 100%);
+  border: 1px solid rgba(120, 184, 255, 0.4);
+  border-radius: 8px;
+  padding: 16px 20px;
+  margin-bottom: 20px;
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--text-secondary);
+  box-shadow: 0 2px 12px rgba(77, 143, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 20px;
+}
+.template-intro p {
+  margin: 0;
+  flex: 1;
+}
+.template-intro .template-actions {
+  position: static;
+  display: flex;
+  justify-content: flex-end;
+  gap: 16px;
+  padding-top: 0;
+  border-top: none;
+}
+
+/* Excel tab - Green */
+#tab-excel .template-intro {
+  background: linear-gradient(135deg, rgba(52, 211, 153, 0.1) 0%, rgba(34, 197, 94, 0.08) 100%);
+  border-color: rgba(52, 211, 153, 0.5);
+  box-shadow: 0 2px 12px rgba(52, 211, 153, 0.15);
+}
+
+/* XMind tab - Blue */
+#tab-xmind .template-intro {
+  background: linear-gradient(135deg, rgba(77, 143, 255, 0.1) 0%, rgba(59, 130, 246, 0.08) 100%);
+  border-color: rgba(77, 143, 255, 0.5);
+  box-shadow: 0 2px 12px rgba(77, 143, 255, 0.15);
+}
+
+/* Markdown tab - Purple */
+#tab-markdown .template-intro {
+  background: linear-gradient(135deg, rgba(167, 139, 250, 0.1) 0%, rgba(139, 92, 246, 0.08) 100%);
+  border-color: rgba(167, 139, 250, 0.5);
+  box-shadow: 0 2px 12px rgba(167, 139, 250, 0.15);
+}
+
+/* Card */
+.card { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 28px 32px; margin: 0; position: relative; overflow: hidden; transition: border-color 0.3s var(--ease); }
+.card::before { content: ''; position: absolute; top: 0; left: 0; right: 0; height: 1px; background: linear-gradient(90deg, transparent, rgba(120, 184, 255, 0.3), transparent); }
+.card:hover { border-color: var(--border-strong); }
+.card-accent { border-left: 3px solid var(--accent-green); }
+.card-accent-blue { border-left: 3px solid var(--accent-blue); }
+.card-accent-green { border-left: 3px solid var(--accent-purple); }
+.card h4 { margin-top: 0; }
+
+/* Card grid */
+.card-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 24px 0; }
+.card-grid .card { text-align: center; padding: 32px 24px; }
+.card-grid .card-icon { font-size: 32px; margin-bottom: 14px; }
+.card-grid .card h4 { margin-bottom: 8px; }
+.card-grid .card p { font-size: 13px; margin-bottom: 0; }
+
+/* ========== FLOWCHART ========== */
+.flow-wrap { margin: 32px 0; padding: 16px 0; }
+.flow-row { display: flex; align-items: center; justify-content: center; gap: 0; flex-wrap: wrap; }
+.flow-step { display: flex; flex-direction: column; align-items: center; text-align: center; width: 160px; position: relative; }
+.flow-step-num { width: 52px; height: 52px; border-radius: 50%; display: flex; align-items: center; justify-content: center; font-size: 20px; font-weight: 800; font-family: var(--font-mono); margin-bottom: 10px; border: 2px solid; transition: all 0.3s var(--ease); }
+.flow-step:nth-child(1) .flow-step-num { color: var(--accent-2); border-color: rgba(120, 184, 255, 0.4); background: rgba(77, 143, 255, 0.1); }
+.flow-step:nth-child(3) .flow-step-num { color: var(--accent-2); border-color: rgba(120, 184, 255, 0.4); background: rgba(77, 143, 255, 0.1); }
+.flow-step:nth-child(5) .flow-step-num { color: var(--accent-sky); border-color: rgba(77, 200, 255, 0.4); background: rgba(77, 200, 255, 0.1); }
+.flow-step:nth-child(7) .flow-step-num { color: var(--accent-green); border-color: rgba(52, 211, 153, 0.4); background: rgba(52, 211, 153, 0.1); }
+.flow-step-num:hover { transform: scale(1.1); }
+.flow-step-label { font-size: 15px; font-weight: 700; color: var(--text-primary); margin-bottom: 4px; }
+.flow-step-sub { font-size: 11px; color: var(--text-secondary); line-height: 1.5; max-width: 140px; }
+.flow-step-tag { font-size: 10px; color: var(--accent-3); margin-top: 4px; font-weight: 500; }
+.flow-arrow { display: flex; align-items: center; color: var(--text-tertiary); font-size: 24px; padding: 0 4px; margin-bottom: 28px; }
+.flow-divider { width: 2px; height: 40px; background: rgba(120, 184, 255, 0.2); border-radius: 1px; margin: 0 24px; align-self: center; margin-bottom: 28px; }
+.flow-divider-label { font-size: 10px; color: var(--text-tertiary); writing-mode: vertical-rl; letter-spacing: 0.08em; position: absolute; white-space: nowrap; }
+
+/* ========== IMAGE PREVIEW MODAL ========== */
+.img-preview-modal { display: none; position: fixed; inset: 0; z-index: 9999; background: rgba(0,0,0,0.92); align-items: center; justify-content: center; cursor: zoom-out; }
+.img-preview-modal.active { display: flex; }
+.img-preview-modal img { max-width: 90vw; max-height: 90vh; object-fit: contain; border-radius: 8px; box-shadow: 0 24px 80px rgba(0,0,0,0.6); }
+.img-preview-close { position: absolute; top: 24px; right: 32px; font-size: 36px; color: #fff; cursor: pointer; background: rgba(255,255,255,0.1); width: 48px; height: 48px; border-radius: 50%; display: flex; align-items: center; justify-content: center; border: none; transition: background 0.2s; }
+.img-preview-close:hover { background: rgba(255,255,255,0.2); }
+
+/* Template screenshot with image */
+.template-screenshot { margin: 0 0 20px; border-radius: var(--radius-sm); border: 1px solid var(--border-strong); background: var(--bg-elevated); overflow: hidden; position: relative; height: 360px; display: flex; align-items: center; justify-content: center; }
+.template-screenshot img { width: 100%; height: 100%; object-fit: cover; cursor: zoom-in; transition: opacity 0.3s; }
+.template-screenshot .placeholder { text-align: center; color: var(--text-tertiary); }
+.template-screenshot .placeholder-icon { font-size: 48px; margin-bottom: 12px; opacity: 0.4; }
+.template-screenshot .placeholder-text { font-size: 13px; }
+.template-screenshot .zoom-hint { position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.5); padding: 3px 10px; border-radius: 4px; pointer-events: none; }
+.markdown-preview-container { background: #1a1a2e; height: 720px; }
+.markdown-view-toggle { position: absolute; top: 10px; right: 14px; display: flex; gap: 8px; z-index: 10; }
+.markdown-view-btn { font-size: 11px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.5); padding: 4px 10px; border-radius: 4px; border: none; cursor: pointer; transition: all 0.2s; font-family: var(--font-sans); display: flex; align-items: center; gap: 4px; }
+.markdown-view-btn:hover { color: rgba(255,255,255,0.8); background: rgba(0,0,0,0.7); }
+.markdown-view-btn.active { color: #fff; background: rgba(77, 143, 255, 0.8); }
+.markdown-preview-wrapper { width: 100%; height: 100%; overflow: hidden; }
+.markdown-preview-mode { width: 100%; height: 100%; background: #1a1a2e; color: #c0c0c0; padding: 16px; overflow: auto; font-family: var(--font-sans); font-size: 15px; line-height: 1.6; }
+.markdown-rendered h1 { font-size: 24px; font-weight: 600; margin-bottom: 16px; color: #e0e0e0; }
+.markdown-rendered h2 { font-size: 18px; font-weight: 600; margin: 20px 0 12px; color: #d0d0d0; }
+.markdown-rendered h3 { font-size: 16px; font-weight: 500; margin: 14px 0 8px; color: #c5c5c5; }
+.markdown-rendered p { font-size: 13px; margin: 6px 0; }
+.markdown-rendered blockquote { background: rgba(255,255,255,0.03); border-left: 2px solid rgba(255,255,255,0.15); padding: 10px 14px; margin: 10px 0; border-radius: 4px; }
+.markdown-rendered blockquote p { font-size: 13px; margin: 4px 0; }
+.markdown-rendered hr { border: none; height: 1px; background: rgba(255,255,255,0.06); margin: 12px 0; }
+.markdown-rendered strong { color: #b0b0b0; font-weight: 500; }
+.markdown-preview-content { width: 100%; height: 100%; background: #1a1a2e; color: #e0e0e0; font-family: 'JetBrains Mono', 'Fira Code', monospace; font-size: 11px; padding: 16px; margin: 0; white-space: pre-wrap; overflow: auto; line-height: 1.5; }
+.markdown-preview-hint { position: absolute; bottom: 10px; right: 14px; font-size: 11px; color: rgba(255,255,255,0.5); background: rgba(0,0,0,0.5); padding: 3px 10px; border-radius: 4px; pointer-events: none; display: flex; align-items: center; gap: 4px; }
+
+/* Remix icon sizing */
+.ri-icon { font-size: 22px; }
+.card-grid .ri-icon { font-size: 32px; }
+.el-icon .ri-icon { font-size: 20px; }
+.tab-btn .ri-icon { font-size: 16px; margin-right: 2px; }
+
+/* ========== 9 ELEMENTS GRID ========== */
+.elements-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 20px; margin: 28px 0; }
+.element-card { position: relative; background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 22px; transition: all 0.3s var(--ease); cursor: default; }
+.element-card:hover { border-color: var(--border-strong); transform: translateY(-2px); box-shadow: 0 8px 32px rgba(0,0,0,0.3); }
+.element-card .el-icon { width: 44px; height: 44px; border-radius: 12px; display: flex; align-items: center; justify-content: center; font-size: 20px; margin-bottom: 14px; }
+.element-card .el-icon.role { background: rgba(77, 143, 255, 0.15); color: var(--accent-3); }
+.element-card .el-icon.stage { background: rgba(77, 200, 255, 0.15); color: var(--accent-sky); }
+.element-card .el-icon.substage { background: rgba(34, 211, 238, 0.15); color: var(--accent-cyan); }
+.element-card .el-icon.branch { background: rgba(244, 114, 182, 0.15); color: var(--accent-pink); }
+.element-card .el-icon.action { background: rgba(245, 158, 11, 0.15); color: var(--accent-orange); }
+.element-card .el-icon.think { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+.element-card .el-icon.pain { background: rgba(239, 68, 68, 0.15); color: #ef4444; }
+.element-card .el-icon.need { background: rgba(250, 204, 21, 0.15); color: #facc15; }
+.element-card .el-icon.idea { background: rgba(120, 184, 255, 0.15); color: var(--accent-2); }
+.element-card .el-title { font-size: 16px; font-weight: 700; color: var(--text-primary); margin-bottom: 6px; }
+.element-card .el-tag { display: inline-block; font-size: 10px; font-weight: 600; letter-spacing: 0.06em; padding: 2px 8px; border-radius: 4px; margin-left: 6px; }
+.el-tag-required { background: rgba(52, 211, 153, 0.15); color: var(--accent-green); }
+.el-tag-optional { background: rgba(139, 148, 158, 0.15); color: var(--text-secondary); }
+.element-card .el-desc { font-size: 13px; color: var(--text-secondary); line-height: 1.6; margin-bottom: 0; }
+
+/* Hover details: tips & example */
+.el-details { max-height: 0; overflow: hidden; transition: max-height 0.4s var(--ease), margin 0.4s var(--ease), opacity 0.3s var(--ease); opacity: 0; }
+.element-card:hover .el-details { max-height: 400px; opacity: 1; margin-top: 14px; }
+.el-tip { font-size: 12px; color: var(--text-secondary); background: rgba(77, 143, 255, 0.08); border: 1px solid rgba(120, 184, 255, 0.2); border-radius: 8px; padding: 10px 14px; margin-bottom: 8px; line-height: 1.6; }
+.el-tip strong { color: #78b8ff; }
+.el-example { font-size: 12px; color: var(--text-secondary); border-radius: 8px; padding: 10px 14px; line-height: 1.6; }
+.el-example-correct { background: rgba(52, 211, 153, 0.06); border: 1px solid rgba(52, 211, 153, 0.18); }
+.el-example-correct strong { color: #34d399; }
+.el-example-wrong { background: rgba(245, 158, 11, 0.06); border: 1px solid rgba(245, 158, 11, 0.18); margin-top: 8px; }
+.el-example-wrong strong { color: #fbbf24; }
+.text-link { color: var(--accent); text-decoration: underline; }
+.text-link:hover { color: var(--accent-2); }
+
+/* ========== TABS ========== */
+.template-tabs { margin: 28px 0; }
+.tab-nav { display: flex; gap: 0; border-bottom: 1px solid var(--border); margin-bottom: 0; }
+.tab-btn { flex: 1; padding: 14px 20px; background: transparent; border: none; color: var(--text-secondary); font-size: 15px; font-weight: 600; cursor: pointer; transition: all 0.3s var(--ease); font-family: var(--font-sans); position: relative; display: flex; align-items: center; justify-content: center; gap: 6px; }
+.tab-btn:hover { color: var(--text-primary); background: rgba(77, 143, 255, 0.04); }
+.tab-btn.active { color: var(--accent-3); }
+.tab-btn.active::after { content: ''; position: absolute; bottom: -1px; left: 0; right: 0; height: 2px; background: var(--accent-2); border-radius: 2px 2px 0 0; }
+
+/* Excel tab - Green */
+.tab-btn[data-tab="tab-excel"].active { color: var(--accent-green); }
+.tab-btn[data-tab="tab-excel"].active::after { background: var(--accent-green); }
+.tab-btn[data-tab="tab-excel"]:hover { background: rgba(52, 211, 153, 0.04); }
+
+/* XMind tab - Blue */
+.tab-btn[data-tab="tab-xmind"].active { color: var(--accent-3); }
+.tab-btn[data-tab="tab-xmind"].active::after { background: var(--accent-2); }
+.tab-btn[data-tab="tab-xmind"]:hover { background: rgba(77, 143, 255, 0.04); }
+
+/* Markdown tab - Purple */
+.tab-btn[data-tab="tab-markdown"].active { color: var(--accent-purple); }
+.tab-btn[data-tab="tab-markdown"].active::after { background: var(--accent-purple); }
+.tab-btn[data-tab="tab-markdown"]:hover { background: rgba(167, 139, 250, 0.04); }
+
+.tab-panel { display: none; background: var(--bg-card); border: 1px solid var(--border); border-top: none; border-radius: 0 0 var(--radius) var(--radius); padding: 56px 32px 28px; position: relative; }
+.tab-panel.active { display: block; }
+
+/* Highlight box - default blue */
+.highlight-box { background: rgba(77, 143, 255, 0.06); border: 1px solid rgba(120, 184, 255, 0.15); border-radius: var(--radius-sm); padding: 20px 24px; }
+.highlight-box h4 { color: var(--accent-3); margin-top: 0; margin-bottom: 6px; font-size: 15px; }
+.highlight-box p { font-size: 14px; margin-bottom: 8px; }
+.highlight-box ol { margin-bottom: 0; }
+
+/* Excel highlight box - Green */
+#tab-excel .highlight-box {
+  background: rgba(52, 211, 153, 0.06);
+  border-color: rgba(52, 211, 153, 0.15);
+}
+#tab-excel .highlight-box h4 { color: var(--accent-green); }
+
+/* XMind highlight box - Blue */
+#tab-xmind .highlight-box {
+  background: rgba(77, 143, 255, 0.06);
+  border-color: rgba(120, 184, 255, 0.15);
+}
+#tab-xmind .highlight-box h4 { color: var(--accent-3); }
+
+/* Markdown highlight box - Purple */
+#tab-markdown .highlight-box {
+  background: rgba(167, 139, 250, 0.06);
+  border-color: rgba(196, 181, 253, 0.15);
+}
+#tab-markdown .highlight-box h4 { color: var(--accent-purple); }
+
+/* Template action buttons — text link style */
+.template-actions { position: absolute; top: 20px; right: 24px; display: flex; gap: 20px; z-index: 5; }
+.template-btn { display: inline-flex; align-items: center; gap: 5px; font-size: 13px; font-weight: 600; font-family: var(--font-sans); cursor: pointer; text-decoration: none; transition: all 0.25s var(--ease); color: var(--accent-3); padding: 0; background: none; border: none; }
+.template-btn i { font-size: 16px; }
+.template-btn:hover { color: #fff; text-decoration: none; }
+.template-btn-outline { color: var(--text-secondary); }
+.template-btn-outline:hover { color: var(--text-primary); }
+
+/* ========== PRACTICE TIPS BOX ========== */
+.tips-box { background: var(--bg-card); border: 1px solid var(--border); border-radius: var(--radius); padding: 24px 28px; margin: 0; }
+.tips-box h3 { font-size: 16px; margin: 0 0 12px; padding-left: 0; border-left: none; color: var(--text-primary); }
+.tips-list { display: flex; gap: 24px; }
+.tips-item { flex: 1; display: flex; gap: 12px; align-items: flex-start; }
+.tips-dot { width: 8px; height: 8px; border-radius: 50%; flex-shrink: 0; margin-top: 6px; }
+.tips-dot.purple { background: var(--accent-2); box-shadow: 0 0 8px rgba(120, 184, 255, 0.5); }
+.tips-dot.blue { background: var(--accent-sky); box-shadow: 0 0 8px rgba(77, 200, 255, 0.5); }
+.tips-dot.green { background: var(--accent-green); box-shadow: 0 0 8px rgba(52, 211, 153, 0.5); }
+.tips-item h4 { font-size: 14px; font-weight: 600; color: var(--text-primary); margin-bottom: 2px; }
+.tips-item p { font-size: 12px; color: var(--text-secondary); margin-bottom: 0; line-height: 1.6; }
+
+/* Divider */
+.divider { height: 1px; background: var(--border); margin: 48px 0; position: relative; }
+.divider::after { content: ''; position: absolute; left: 50%; top: 50%; transform: translate(-50%, -50%); width: 6px; height: 6px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px rgba(120, 184, 255, 0.4); }
+
+/* Links */
+a { color: var(--accent-blue); text-decoration: none; transition: color 0.2s; }
+a:hover { color: var(--accent-3); text-decoration: underline; }
+
+/* Footer */
+.footer { position: relative; z-index: 1; text-align: center; padding: 48px 40px; border-top: 1px solid var(--border); color: var(--text-tertiary); font-size: 13px; }
+.footer-dept { font-size: 14px; font-weight: 600; color: var(--text-secondary); margin-top: 8px; letter-spacing: 0.06em; }
+
+/* Code inline */
+code { font-family: var(--font-mono); font-size: 13px; background: rgba(120, 184, 255, 0.1); color: var(--accent-3); padding: 2px 8px; border-radius: 4px; border: 1px solid rgba(120, 184, 255, 0.15); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .hero h1 { font-size: 36px; }
+  .hero { padding: 120px 24px 60px; }
+  .content-wrapper { padding: 0 24px 60px; }
+  .section h2 { font-size: 28px; }
+  .section h3 { font-size: 20px; }
+  .card-grid { grid-template-columns: 1fr; }
+  .elements-grid { grid-template-columns: 1fr; }
+  .tips-list { flex-direction: column; gap: 12px; }
+  .nav { padding: 0 16px; }
+  .tab-nav { flex-direction: column; }
+  .tab-btn { text-align: left; justify-content: flex-start; }
+  .template-actions { position: static; margin-bottom: 16px; justify-content: flex-start; }
+  .side-nav { display: none; }
+  .flow-row { flex-direction: column; gap: 0; }
+  .flow-arrow { transform: rotate(90deg); margin: 0; }
+  .flow-divider { width: 40px; height: 2px; margin: 0; }
+  .template-screenshot { height: 240px; }
+  .markdown-preview-container { height: 480px; }
+  .markdown-view-toggle { top: 8px; right: 10px; gap: 4px; }
+  .markdown-view-btn { font-size: 10px; padding: 3px 8px; }
+}
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* Print */
+@media print {
+  body::before { display: none; }
+  .nav, .side-nav, .footer { display: none; }
+  .hero { padding: 40px 20px; }
+  .hero h1 { -webkit-text-fill-color: #111; }
+  .card { break-inside: avoid; }
+  .el-details { max-height: none !important; opacity: 1 !important; }
+}
+</style>
+</head>
+<body>
+
+<div class="grid-lines"></div>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <span class="nav-brand-dot"></span>
+    设计思维方法
+  </div>
+  <span class="nav-tag">User Journey Mapping</span>
+</nav>
+
+<!-- Right side anchor navigation -->
+<nav class="side-nav" id="sideNav">
+  <a href="#s1" class="active">背景与理念</a>
+  <a href="#s2">用户旅程图</a>
+  <a href="#s2-flow">使用流程</a>
+  <a href="#s2-elements">用户旅程9要素</a>
+  <a href="#s3">模板工具</a>
+  <a href="#tips">实践技巧</a>
+</nav>
+
+<header class="hero">
+  <h1>以用户旅程为核心的<br>轻量化设计思维方法</h1>
+  <div class="hero-badge">
+    <span class="hero-badge-dot"></span>
+    云BG产品设计部
+  </div>
+  <p class="hero-subtitle">
+    保留设计思维的内核，降低落地门槛。提供 Excel、XMind、Markdown + AI Skill 三种<strong class="highlight-template">用户旅程模板</strong>，从需求调研到方案发散，让团队真正用起来。
+  </p>
+</header>
+
+<main class="content-wrapper">
+
+  <!-- Section 1 -->
+  <section class="section" id="s1">
+    <div class="section-number">01 / 背景与理念</div>
+    <h2>背景与核心理念</h2>
+    <p>
+      设计思维的核心在于<strong>从用户视角出发</strong>，先理解问题、再定义方案。公司自引入 IBM 设计思维方法论以来，这一理念已逐步被团队接受。但在真实项目实践中，完整的方法体系对大多数日常项目而言门槛偏高，团队较难持续落地。
+    </p>
+    <p>
+      经过设计师在云BG多个产品线的反复实践与验证，我们发现：尽管设计思维提供了一整套工具，但在日常项目中，<strong>用户旅程图是串联需求全流程的核心抓手</strong>。它以用户的实际工作场景为线索，将用户行为、痛点、需求贯穿起来，从需求调研到方案输出形成闭环。相比干系人地图、用户画像等更适合产品级一次性梳理的工具，用户旅程图是每个项目都能用、每次需求梳理都需要的工具。
+    </p>
+    <p>
+      因此，我们以用户旅程图为核心，构建这套<strong>轻量化设计方法</strong>——保留设计思维的内核，降低落地门槛，让团队真正用起来。
+    </p>
+
+    <div class="card-grid">
+      <div class="card card-accent">
+        <div class="card-icon"><i class="ri-heart-pulse-line ri-icon"></i></div>
+        <h4>建立用户同理心</h4>
+        <p>将用户的工作场景、行为习惯和真实困难直观呈现，帮助团队从用户视角理解问题，而非凭经验臆断用户需求</p>
+      </div>
+      <div class="card card-accent-blue">
+        <div class="card-icon"><i class="ri-shield-check-line ri-icon"></i></div>
+        <h4>保障客户价值</h4>
+        <p>为需求分析和方案发散提供事实依据，确保最终方案真正解决用户痛点、为客户创造价值，而非停留在功能堆砌</p>
+      </div>
+      <div class="card card-accent-green">
+        <div class="card-icon"><i class="ri-user-smile-line ri-icon"></i></div>
+        <h4>人人可上手</h4>
+        <p>告别过去依赖设计工具与专业设计师的沉重流程，让团队中的每个人都能轻松绘制用户旅程、参与需求梳理</p>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Section 2: 用户旅程图 -->
+  <section class="section" id="s2">
+    <div class="section-number">02 / 核心工具</div>
+    <h2>用户旅程图</h2>
+    <p>
+      用户现状旅程地图是梳理用户在真实场景中工作细节的工具。它以旅程地图的方式记录用户的<strong>行为</strong>、<strong>感受和想法</strong>，并在此基础上提炼<strong>痛点</strong>、定义<strong>需求</strong>。
+    </p>
+
+    <!-- 2.1 使用流程 -->
+    <h3 id="s2-flow">使用流程</h3>
+    <p>本方法遵循简化的设计思维流程，以用户旅程图为载体，从需求调研到方案发散，最终目标是明确一个需求应该怎么做。</p>
+
+    <div class="flow-wrap">
+      <div class="flow-row">
+        <!-- Step 1: 需求调研 -->
+        <div class="flow-step">
+          <div class="flow-step-num">01</div>
+          <div class="flow-step-label">需求调研</div>
+          <div class="flow-step-sub">通过用户访谈、现场观察或结合竞品，收集用户行为、想法与痛点</div>
+          <div class="flow-step-tag">建立对目标用户的真实认知</div>
+        </div>
+        <div class="flow-arrow"><i class="ri-arrow-right-line"></i></div>
+        <!-- Step 2: 场景梳理 -->
+        <div class="flow-step">
+          <div class="flow-step-num">02</div>
+          <div class="flow-step-label">场景梳理</div>
+          <div class="flow-step-sub">基于调研信息，利用用户旅程图梳理核心工作场景，划分阶段、明确角色</div>
+          <div class="flow-step-tag">还原用户的操作路径与感受</div>
+        </div>
+        <div class="flow-divider"></div>
+        <!-- Step 3: 明确需求 -->
+        <div class="flow-step">
+          <div class="flow-step-num">03</div>
+          <div class="flow-step-label">明确需求</div>
+          <div class="flow-step-sub">从旅程图中提炼痛点，推导用户需求，明确需求的优先级与边界</div>
+          <div class="flow-step-tag">形成可供团队讨论的需求清单</div>
+        </div>
+        <div class="flow-arrow"><i class="ri-arrow-right-line"></i></div>
+        <!-- Step 4: 发散方案 -->
+        <div class="flow-step">
+          <div class="flow-step-num">04</div>
+          <div class="flow-step-label">发散方案</div>
+          <div class="flow-step-sub">围绕需求进行方案发散，包括产品功能、服务流程、运营策略等</div>
+          <div class="flow-step-tag">最终输出可执行的方案建议</div>
+        </div>
+      </div>
+    </div>
+
+    <!-- 2.2 用户旅程9要素 -->
+    <h3 id="s2-elements">用户旅程9要素</h3>
+    <p>用户旅程图由以下 9 个关键要素构成，从角色到阶段、从行为到痛点、从需求到方案，层层递进，形成完整的需求分析闭环。</p>
+
+    <div class="elements-grid">
+      <!-- 1. 用户角色 -->
+      <div class="element-card">
+        <div class="el-icon role"><i class="ri-user-3-line ri-icon"></i></div>
+        <div class="el-title">用户角色 <span class="el-tag el-tag-required">必填</span></div>
+        <p class="el-desc">按参与程度划分核心用户与参与用户，关注实际执行者而非购买决策者</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>关注实际执行任务的 User（执行者），而非仅关注购买决策者（Buyer）。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>在数据库监控运维场景中，核心用户是数据库运维 DBA，参与用户包括系统运维工程师、业务运营人员、IT 运维主管/CIO。</div>
+        </div>
+      </div>
+      <!-- 2. 阶段 -->
+      <div class="element-card">
+        <div class="el-icon stage"><i class="ri-layout-masonry-line ri-icon"></i></div>
+        <div class="el-title">阶段 <span class="el-tag el-tag-required">必填</span></div>
+        <p class="el-desc">最粗粒度的旅程划分，每个阶段对应一个独立业务大步骤，构成旅程骨架</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>通常划分为 3-5 个阶段，以动词短语概括核心任务，确保阶段间逻辑连贯、边界清晰。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>数据库告警处置场景可划分为「监控巡检与发现异常」「问题定位与诊断分析」「业务恢复与风险优化」三个阶段。</div>
+        </div>
+      </div>
+      <!-- 3. 子阶段 -->
+      <div class="element-card">
+        <div class="el-icon substage"><i class="ri-search-eye-line ri-icon"></i></div>
+        <div class="el-title">子阶段 <span class="el-tag el-tag-optional">可选</span></div>
+        <p class="el-desc">对阶段进一步拆解的更小粒度步骤单元，适用于流程长、逻辑复杂的阶段</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>子阶段聚焦单一任务，数量不宜过多；各子阶段之间保持逻辑递进关系。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>「监控与发现异常」阶段可拆解为「监控配置」「日常监控巡检」「发现异常」三个子阶段。</div>
+        </div>
+      </div>
+      <!-- 4. 分支情况 -->
+      <div class="element-card">
+        <div class="el-icon branch"><i class="ri-git-branch-line ri-icon"></i></div>
+        <div class="el-title">分支情况 <span class="el-tag el-tag-optional">可选</span></div>
+        <p class="el-desc">同一子阶段内因用户条件、系统状态不同产生的多条互斥路径</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>Excel 模板通过【场景标注】（如【有 DMP】【无 DMP】）区分；XMind 通过 Case 节点区分。不同标注的步骤互斥，非全部必做。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>在数据库监控运维场景中，「监控配置」子阶段存在【有 DMP】和【无 DMP】两个分支——【有 DMP】时直接在平台上配置告警规则；【无 DMP】时需部署 zabbix、撰写运维脚本来自建监控体系。</div>
+        </div>
+      </div>
+      <!-- 5. 所做 -->
+      <div class="element-card">
+        <div class="el-icon action"><i class="ri-focus-3-line ri-icon"></i></div>
+        <div class="el-title">所做 <span class="el-tag el-tag-required">必填</span></div>
+        <p class="el-desc">描述用户在特定阶段/子阶段中执行的具体行为，需明确行为主体及内容</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>行为描述应具体可感知，但无需细化至界面操作层级。避免笼统描述，如"资源部署"。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>关注指标趋势和异常（所做描述：在监控室或专人屏幕监控，看徒增/降指标和飘红、飘黄的地方）。</div><div class="el-example el-example-wrong"><strong>错误示例：</strong>进入"监控"页面——查看监控指标。</div>
+        </div>
+      </div>
+      <!-- 6. 所说/所想 -->
+      <div class="element-card">
+        <div class="el-icon think"><i class="ri-chat-1-line ri-icon"></i></div>
+        <div class="el-title">所说 / 所想 <span class="el-tag el-tag-optional">可选</span></div>
+        <p class="el-desc">记录用户行为动机、内心感受与口头表达，为痛点推导提供事实依据</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>需明确归属角色，表述应完整交代因果关系，避免仅呈现结论性判断。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>不知全部数据库的健康状态，没有收到报告，担心没及时发现问题。</div><div class="el-example el-example-wrong"><strong>错误示例：</strong>担心</div>
+        </div>
+      </div>
+      <!-- 7. 痛点 -->
+      <div class="element-card">
+        <div class="el-icon pain"><i class="ri-error-warning-line ri-icon"></i></div>
+        <div class="el-title">痛点 <span class="el-tag el-tag-optional">可选</span></div>
+        <p class="el-desc">用户在完成任务过程中遇到的具体障碍或负面体验，是需求推导的直接来源</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>需明确归属角色，描述应包含原因与结果/表现，避免仅写现象而忽略根因。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>被动响应问题（痛点描述：前置预警不足，往往是出了问题才被通知及介入处理，无法提前防范）。</div><div class="el-example el-example-wrong"><strong>错误示例：</strong>被动响应问题。</div>
+        </div>
+      </div>
+      <!-- 8. 需求 -->
+      <div class="element-card">
+        <div class="el-icon need"><i class="ri-file-list-3-line ri-icon"></i></div>
+        <div class="el-title">需求 <span class="el-tag el-tag-optional">可选</span></div>
+        <p class="el-desc">基于痛点推导出的用户期望达成的目标，定义解决方案方向的依据</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>标准句式——【角色】需要一种方式来【做什么】，这样可以【获得什么】。聚焦用户价值，不预设实现方案。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>运维工程师需要一种方式在云主机发生故障时自动将业务迁移至可用节点，这样可以减少业务中断时间，避免客户投诉。</div><div class="el-example el-example-wrong"><strong>错误示例：</strong>开发云主机故障自动迁移功能，增加故障切换按钮。</div>
+        </div>
+      </div>
+      <!-- 9. 点子 -->
+      <div class="element-card">
+        <div class="el-icon idea"><i class="ri-lightbulb-line ri-icon"></i></div>
+        <div class="el-title">点子 <span class="el-tag el-tag-optional">可选</span></div>
+        <p class="el-desc">将需求转化为可落地执行方案，连接需求分析与产品/服务/培训设计的桥梁</p>
+        <div class="el-details">
+          <div class="el-tip"><strong>撰写要点：</strong>"点子"不是"功能"，团队成员一起头脑风暴能满足场景下用户的点子而非具体的功能，点子能带来相互的启发，而功能会限制住大家的。一个需求可对应一个或多个点子，点子应具备可执行性，面向开发/设计/运营等后续环节。</div>
+          <div class="el-example el-example-correct"><strong>正确示例：</strong>运维人员可以在一个面板上看到所有数据库的健康状态概览，无需切换多个页面。</div><div class="el-example el-example-wrong"><strong>错误示例：</strong>开发统一监控仪表盘功能</div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- Section 3: 模板 -->
+  <section class="section" id="s3">
+    <div class="section-number">03 / 模板工具</div>
+    <h2>用户旅程图模板</h2>
+    <p>我们提供三种不同形式的用户旅程模板，请<strong class="highlight-template">根据你的项目场景和团队习惯</strong>，选择最适合的一种进行使用：</p>
+
+    <div class="template-tabs">
+      <div class="tab-nav">
+        <button class="tab-btn active" data-tab="tab-excel"><i class="ri-file-excel-2-line ri-icon"></i> Excel 模板</button>
+        <button class="tab-btn" data-tab="tab-xmind"><i class="ri-mind-map ri-icon"></i> XMind 模板</button>
+        <button class="tab-btn" data-tab="tab-markdown"><i class="ri-markdown-line ri-icon"></i> Markdown + AI Skill</button>
+      </div>
+
+      <!-- Excel tab -->
+      <div class="tab-panel active" id="tab-excel">
+        <div class="template-intro">
+          <p>更适合多用户角色，场景结构相对清晰的情况，可更聚焦梳理用户所做、所想等内容</p>
+          <div class="template-actions">
+            <a href="https://doc.weixin.qq.com/sheet/e3_AV0AbAYhAAkCN7a2c83GeRYGDEvd1?scode=AI4AagdpABETUpHKp5AY4AZAYhAAk&tab=3ou21z" target="_blank" class="template-btn" data-tooltip="去企微文档使用"><i class="ri-external-link-line"></i> 使用模板</a>
+            <a href="https://doc.weixin.qq.com/sheet/e3_AV0AbAYhAAkCN7a2c83GeRYGDEvd1?scode=AI4AagdpABE0kY4iDvAY4AZAYhAAk&tab=slj0l4" target="_blank" class="template-btn template-btn-outline" data-tooltip="去企微文档查看"><i class="ri-file-search-line"></i> 查看示例文件</a>
+          </div>
+        </div>
+        <div class="template-screenshot">
+          <img src="示例图/Exclel 示例.jpg" alt="Excel 模板截图" onclick="openPreview(this.src)" loading="lazy">
+          <div class="zoom-hint"><i class="ri-zoom-in-line"></i> 点击放大预览</div>
+        </div>
+        <div class="highlight-box">
+          <h4>特点</h4>
+          <p>以表格形式呈现，横向为阶段，纵向为角色和各要素，支持多角色并排展示，泳道清晰；版面直观清晰，与传统旅程图样式接近</p>
+          <h4>使用方式</h4>
+          <p>1. 从<a href="https://doc.weixin.qq.com/sheet/e3_AV0AbAYhAAkCN7a2c83GeRYGDEvd1?scode=AI4AagdpABEZy47cZDAY4AZAYhAAk&wikifileid=w.AI4AagdpABE.jj-evp2yUi0_le3.775207822lbUQ&tab=3ou21z" target="_blank" class="text-link">企微文档</a>复制模板，根据用户旅程图的用户角色数量选择合适的模板（多角色模板/单角色模板）</p>
+          <p>2. 在模板表格中依次填入阶段、子阶段、所做、所想、痛点、需求、点子等用户旅程要素</p>
+        </div>
+      </div>
+
+      <!-- XMind tab -->
+      <div class="tab-panel" id="tab-xmind">
+        <div class="template-intro">
+          <p>更适合用户角色单一，场景仍在探索的情况，阶段和内容可以调整灵活</p>
+          <div class="template-actions">
+            <a href="https://doc.weixin.qq.com/mind/m4_AY4AZAYhAAkCNOE0Z7YPFRy60kZhW?scode=AI4AagdpABEtuxDR3XAY4AZAYhAAk" target="_blank" class="template-btn" data-tooltip="去企微文档使用"><i class="ri-external-link-line"></i> 使用模板</a>
+            <a href="https://doc.weixin.qq.com/mind/m4_AY4AZAYhAAkCNw090tIbdQVKZV8vh?scode=AI4AagdpABEk9gdpm9AY4AZAYhAAk" target="_blank" class="template-btn template-btn-outline" data-tooltip="去企微文档查看"><i class="ri-file-search-line"></i> 查看示例文件</a>
+          </div>
+        </div>
+        <div class="template-screenshot">
+          <img src="示例图/XMind示例.png" alt="XMind 模板截图" onclick="openPreview(this.src)" loading="lazy">
+          <div class="zoom-hint"><i class="ri-zoom-in-line"></i> 点击放大预览</div>
+        </div>
+        <div class="highlight-box">
+          <h4>特点</h4>
+          <p>以树状结构展开，以节点层级呈现，阶段和内容可随时拖拽调整，灵活度高；更像思维导图，发散感较强</p>
+          <h4>使用方式</h4>
+          <p>1. 从<a href="https://doc.weixin.qq.com/mind/m4_AY4AZAYhAAkCNOE0Z7YPFRy60kZhW?scode=AI4AagdpABEtuxDR3XAY4AZAYhAAk" target="_blank" class="text-link">企微文档</a>复制 XMind 模板文件</p>
+          <p>2. 根据场景需要添加或删除节点，拖拽调整阶段顺序和层级结构</p>
+          <p>3. 在各节点中填入用户角色、所做、所想、痛点、需求等内容</p>
+        </div>
+      </div>
+
+      <!-- Markdown tab -->
+      <div class="tab-panel" id="tab-markdown">
+        <div class="template-intro">
+          <p>更适合AI 工作流场景，无格式限制，便于衔接 AI 工具继续做Demo 输出等环节。</p>
+          <div class="template-actions">
+            <a href="用户旅程案例与模板/用户旅程图SKILL.md" download class="template-btn"><i class="ri-download-2-line"></i> 下载 Skill</a>
+          </div>
+        </div>
+        <div class="template-screenshot markdown-preview-container">
+          <div class="markdown-view-toggle">
+            <button class="markdown-view-btn active" data-view="preview"><i class="ri-eye-line"></i> 预览模式</button>
+            <button class="markdown-view-btn" data-view="text"><i class="ri-code-line"></i> 文本模式</button>
+          </div>
+          <div class="markdown-preview-wrapper">
+            <div class="markdown-preview-mode markdown-rendered" id="markdown-preview-mode">
+              <h1>数据库监控运维平台（DMP） - 数据库监控与故障处置用户旅程图</h1>
+              <blockquote>
+                <p><strong>产品：</strong>数据库监控运维平台（DMP）</p>
+                <p><strong>目标用户：</strong>数据库运维 DBA、系统运维工程师、业务运营人员、IT 运维主管/CIO</p>
+                <p><strong>场景：</strong>数据库监控配置、异常发现、问题定位诊断、业务恢复及风险优化的全流程</p>
+                <p><strong>文档版本：</strong>v1.0 / 2026-06-16</p>
+              </blockquote>
+              <hr>
+              <h2>场景说明</h2>
+              <p>本文档梳理数据库监控运维场景下，从监控配置与巡检、异常发现、问题定位与根因分析，到业务恢复和风险优化的全流程用户旅程。涵盖有 DMP 平台和无 DMP 平台（或 DMP 数据受限）两种客户环境下的不同处置路径。</p>
+              <p><strong>覆盖范围：</strong>监控配置与巡检 → 发现异常 → 问题定位与诊断分析 → 业务恢复 → 复盘与优化</p>
+              <hr>
+              <h2>阶段 1 / 监控巡检与发现异常</h2>
+              <p><strong>Case1: 客户有 DMP</strong></p>
+              <h3>1.1 监控配置</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong></p>
+              <p><strong>【所做】</strong>在 DMP 平台上配置告警规则，基于不同数据库类型设置不同指标阈值</p>
+              <p><strong>【所想】</strong>邮件通知告警的时效性低，起不到及时反馈的作用</p>
+              <p><strong>【所说】</strong>监控最重要的是出现问题的时候能够及时通知和预警，因为不会总是盯着监控数据来看</p>
+              <hr>
+              <h3>1.2 发现异常</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong> / ⭐ <strong>系统运维工程师</strong> / ⭐ <strong>业务运营人员</strong></p>
+              <p><strong>【所做 1】</strong>接收告警短信和邮件，目前仅数据库运维 DBA 和系统运维工程师可收到通知</p>
+              <p><strong>【所想】</strong>告警通知太多反成骚扰，有可能掩盖了核心问题；告警信息数量太多时，很难区分出哪些更紧急、更重要，告警的效果降低；发现问题时已经对用户造成影响，平时很难做到预警；很多告警报错专业度较高，看不懂</p>
+              <p><strong>【痛点】</strong>被动响应问题。前置预警不足，往往是出了问题才被通知及介入处理，无法提前防范</p>
+              <p><strong>【需求】</strong>风险出现时，平台能够提前通知，避免问题加深</p>
+              <blockquote>
+                <p>💡 <strong>【点子】</strong></p>
+                <p><strong>风险阈值设置：</strong>支持基于不同数据库类型配置差异化风险阈值，实现前置预警，变被动响应为主动发现</p>
+              </blockquote>
+              <p><strong>【所做 2】</strong>业务运营人员发现业务异常，反馈至运维部门</p>
+              <hr>
+              <p><strong>Case2: 客户无 DMP，或有 DMP 但数据受限</strong></p>
+              <h3>1.1 自建监控体系</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong></p>
+              <p><strong>【所做 1】</strong>部署 zabbix 并自定义大屏，监控端口、CPU 内存、磁盘、表空间等指标</p>
+              <p><strong>【所做 2】</strong>撰写运维脚本，监控慢查询、死锁、读写等待过长等指标</p>
+              <hr>
+              <h3>1.2 日常监控和巡检</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong></p>
+              <p><strong>【所做 1】</strong>专人值守，关注指标趋势和异常，在监控室或专人屏幕监控，查看陡增/降指标和飘红飘黄的地方</p>
+              <p><strong>【所想】</strong>不知道全部数据库的健康状态，没有收到报告，担心未能及时发现问题；指标众多，不知道哪些更关键、背后反映什么问题</p>
+              <p><strong>【痛点】</strong>监控数据难懂、不够直观。告警和监控指标繁多且有掌握门槛，难以了解全局情况、难以判断是否存在风险和异常</p>
+              <p><strong>【需求】</strong>能直观地查看数据库资产的整体运行概貌，无需理解众多、复杂的指标就能了解大致的问题和处置步骤</p>
+              <blockquote>
+                <p>💡 <strong>【点子】</strong></p>
+                <p><strong>告警聚合和 AI 分析：</strong>自动聚合关联告警，AI 分析指标异常根因，输出可理解的诊断结论</p>
+                <p><strong>步骤式排障向导：</strong>提供按步骤排查问题的交互式向导，降低排查门槛</p>
+              </blockquote>
+              <p><strong>【所做 2】</strong>执行运维脚本，采集指标信息</p>
+              <hr>
+              <h3>1.3 发现异常</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong> / ⭐ <strong>系统运维工程师</strong> / ⭐ <strong>业务运营人员</strong></p>
+              <p><strong>【所做 1】</strong>接收告警短信和邮件（同 Case1）</p>
+              <p><strong>【所想】</strong>同 Case1：告警通知太多反成骚扰，发现问题时已经对用户造成影响</p>
+              <p><strong>【所做 2】</strong>发现业务异常，反馈至运维部门</p>
+              <hr>
+              <h2>阶段 2 / 问题定位、诊断分析</h2>
+              <h3>2.1 确定问题边界和方向</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong></p>
+              <p><strong>【所做】</strong>确定异常对象和表征：定位出问题的设备、可能影响的其他设备，以及具体异常表现（是无响应挂了还是卡慢）；通常以告警、异常项、巡检报告作为判断依据，或进入数据库后台进行分析</p>
+              <p><strong>【所想】</strong>如果设备众多，短时间很难定位具体是哪些；如果问题不清晰，容易出现部门扯皮，业务、网络、系统数据库人员轮番排查；排查专业门槛高，团队排查能力弱</p>
+              <p><strong>【痛点】</strong>定位难、沟通难。业务和资产众多时难以定位；原因不清晰/复杂时需要多方协查，沟通效率低下，容易扯皮</p>
+              <p><strong>【需求】</strong>快速准确地定位问题根源及影响面</p>
+              <blockquote>
+                <p>💡 <strong>【点子】</strong></p>
+                <p><strong>资源关系拓扑图：</strong>自动绘制数据库与周边资源（应用、网络、服务器）的依赖拓扑，故障时一键定位影响范围</p>
+              </blockquote>
+              <hr>
+              <h3>2.2 根因分析</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong> / ⭐⭐ <strong>系统运维工程师</strong></p>
+              <p><strong>【所做 1】</strong>按维度依次分析数据库指标（查询、CPU、内存、磁盘等），运用各维度的看指标逻辑定位问题（如查询维度先看慢查询数量、再看高频查询模板、最后看历史会话定位问题 SQL）</p>
+              <p><strong>【所想】</strong>监控其实还是比较准的，但是问题是监控到的现象，比如速率降低，具体是什么原因比较难分析，可能是多个因素导致；经常遇到 SQL 语句无法执行的问题，不好排查，而且容易扯皮</p>
+              <p><strong>【痛点】</strong>分析难。分析需要深入数据库内部分析会话、SQL、锁情况，繁琐且专业难度高，不能保证团队的 DBA 精通全部类型数据库和问题</p>
+              <p><strong>【需求】</strong>平台能够自动分析根因，给出明确的诊断结论，降低对 DBA 个人经验的依赖</p>
+              <blockquote>
+                <p>💡 <strong>【点子】</strong></p>
+                <p><strong>智能根因分析：</strong>基于多维指标关联分析，自动定位问题根因（SQL、锁、资源瓶颈等），输出诊断报告</p>
+              </blockquote>
+              <p><strong>【所做 2】</strong>准确定位问题后立即恢复业务；暂时无法定位时先保存环境配置，通过 kill 会话或重启等方式临时恢复业务</p>
+              <p><strong>【所想】</strong>监控报表不仅需要呈现指标现状，最好还可以直接暴露存在问题或风险的地方，能够有一些结论</p>
+              <p><strong>【痛点】</strong>处置难。不清楚处置方案是否能从根本解决问题，只能凭借已有的经验，问题可能会再次出现</p>
+              <p><strong>【需求】</strong>平台能够根据诊断结果推荐处置方案，并评估方案的彻底性和风险</p>
+              <blockquote>
+                <p>💡 <strong>【点子】</strong></p>
+                <p><strong>处置方案推荐：</strong>基于根因分析结果，自动推荐处置方案（kill 会话、扩容、索引优化等），并标注方案彻底性和风险等级</p>
+              </blockquote>
+              <p><strong>【所做 3】</strong>协调系统运维工程师协助排查网络、服务器、机房等相关设备和指标</p>
+              <hr>
+              <h2>阶段 3 / 业务恢复、风险优化</h2>
+              <h3>3.1 业务恢复</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong> / ⭐⭐ <strong>系统运维工程师</strong> / ⭐ <strong>业务运营人员</strong></p>
+              <p><strong>【所做 1】</strong>根据异常类型采取不同处置措施：资源规格和配置问题则扩容或修改配置；SQL 问题则 kill 会话；软件版本及其他问题则找第三方厂商处理</p>
+              <p><strong>【所想】</strong>有没有能够一键恢复业务的操作？能够快速恢复业务；如果要到物理服务器上进行操作，就会比较麻烦</p>
+              <p><strong>【痛点】</strong>处置操作存在门槛，或依赖第三方时效低。部分操作需要登入数据库后台执行 SQL，非单一问题且不熟悉时需要联系其他同事/厂商</p>
+              <p><strong>【需求】</strong>一键处置 + 处置过程可视化，简单、高效地修复问题，减少故障对业务造成的影响</p>
+              <blockquote>
+                <p>💡 <strong>【点子】</strong></p>
+                <p><strong>一键处置：</strong>提供常用处置操作的一键执行能力（kill 会话、扩容、参数调整等），无需登录后台</p>
+                <p><strong>处置过程可视化：</strong>处置操作全程可视化展示，每一步操作的影响范围和风险提示一目了然</p>
+              </blockquote>
+              <p><strong>【所做 2】</strong>处置异常过程中寻求系统运维工程师协助，比如重启设备或修改网络配置等</p>
+              <p><strong>【所做 3】</strong>跟业务运营人员验证业务已恢复</p>
+              <hr>
+              <h3>3.2 复盘和优化</h3>
+              <p><strong>【用户】</strong>⭐⭐ <strong>数据库运维 DBA</strong> / ⭐ <strong>IT 运维主管/CIO</strong></p>
+              <p><strong>【所做 1】</strong>通常按季度汇报，总结周期内出现的问题，针对频发问题分析共性原因并提供解决方案；由 IT 部运维主管/CIO 等确认后续是否优化</p>
+              <p><strong>【所做 2】</strong>协同业务部门优化业务 SQL，协同 SRE 工程师进行高可用改造或添加存储盘等</p>
+            </div>
+            <pre class="markdown-preview-content markdown-text-mode" id="markdown-text-mode" style="display: none;"># 数据库监控运维平台（DMP） - 数据库监控与故障处置用户旅程图
+
+> 产品：数据库监控运维平台（DMP）
+> 目标用户：数据库运维 DBA、系统运维工程师、业务运营人员、IT 运维主管/CIO
+> 场景：数据库监控配置、异常发现、问题定位诊断、业务恢复及风险优化的全流程
+> 文档版本：v1.0 / 2026-06-16
+
+***
+
+## 场景说明
+
+本文档梳理数据库监控运维场景下，从监控配置与巡检、异常发现、问题定位与根因分析，到业务恢复和风险优化的全流程用户旅程。涵盖有 DMP 平台和无 DMP 平台（或 DMP 数据受限）两种客户环境下的不同处置路径。
+
+**覆盖范围：** 监控配置与巡检 → 发现异常 → 问题定位与诊断分析 → 业务恢复 → 复盘与优化
+
+***
+
+## 阶段 1 / 监控巡检与发现异常
+
+**Case1: 客户有 DMP**
+
+### 1.1 监控配置
+
+**【用户】** ⭐⭐ **数据库运维 DBA**
+
+**【所做】** 在 DMP 平台上配置告警规则，基于不同数据库类型设置不同指标阈值
+
+**【所想】** 邮件通知告警的时效性低，起不到及时反馈的作用
+
+**【所说】** 监控最重要的是出现问题的时候能够及时通知和预警，因为不会总是盯着监控数据来看
+
+***
+
+### 1.2 发现异常
+
+**【用户】** ⭐⭐ **数据库运维 DBA** / ⭐ **系统运维工程师** / ⭐ **业务运营人员**
+
+**【所做 1】** 接收告警短信和邮件，目前仅数据库运维 DBA 和系统运维工程师可收到通知
+
+**【所想】** 告警通知太多反成骚扰，有可能掩盖了核心问题；告警信息数量太多时，很难区分出哪些更紧急、更重要，告警的效果降低；发现问题时已经对用户造成影响，平时很难做到预警；很多告警报错专业度较高，看不懂
+
+**【痛点】** 被动响应问题。前置预警不足，往往是出了问题才被通知及介入处理，无法提前防范
+
+**【需求】** 风险出现时，平台能够提前通知，避免问题加深
+
+> 💡 **【点子】**
+>
+> **风险阈值设置：** 支持基于不同数据库类型配置差异化风险阈值，实现前置预警，变被动响应为主动发现
+
+**【所做 2】** 业务运营人员发现业务异常，反馈至运维部门
+
+***
+
+**Case2: 客户无 DMP，或有 DMP 但数据受限**
+
+### 1.1 自建监控体系
+
+**【用户】** ⭐⭐ **数据库运维 DBA**
+
+**【所做 1】** 部署 zabbix 并自定义大屏，监控端口、CPU 内存、磁盘、表空间等指标
+
+**【所做 2】** 撰写运维脚本，监控慢查询、死锁、读写等待过长等指标
+
+***
+
+### 1.2 日常监控和巡检
+
+**【用户】** ⭐⭐ **数据库运维 DBA**
+
+**【所做 1】** 专人值守，关注指标趋势和异常，在监控室或专人屏幕监控，查看陡增/降指标和飘红飘黄的地方
+
+**【所想】** 不知道全部数据库的健康状态，没有收到报告，担心未能及时发现问题；指标众多，不知道哪些更关键、背后反映什么问题
+
+**【痛点】** 监控数据难懂、不够直观。告警和监控指标繁多且有掌握门槛，难以了解全局情况、难以判断是否存在风险和异常
+
+**【需求】** 能直观地查看数据库资产的整体运行概貌，无需理解众多、复杂的指标就能了解大致的问题和处置步骤
+
+> 💡 **【点子】**
+>
+> **告警聚合和 AI 分析：** 自动聚合关联告警，AI 分析指标异常根因，输出可理解的诊断结论
+>
+> **步骤式排障向导：** 提供按步骤排查问题的交互式向导，降低排查门槛
+
+**【所做 2】** 执行运维脚本，采集指标信息
+
+***
+
+### 1.3 发现异常
+
+**【用户】** ⭐⭐ **数据库运维 DBA** / ⭐ **系统运维工程师** / ⭐ **业务运营人员**
+
+**【所做 1】** 接收告警短信和邮件（同 Case1）
+
+**【所想】** 同 Case1：告警通知太多反成骚扰，发现问题时已经对用户造成影响
+
+**【所做 2】** 发现业务异常，反馈至运维部门
+
+***
+
+## 阶段 2 / 问题定位、诊断分析
+
+### 2.1 确定问题边界和方向
+
+**【用户】** ⭐⭐ **数据库运维 DBA**
+
+**【所做】** 确定异常对象和表征：定位出问题的设备、可能影响的其他设备，以及具体异常表现（是无响应挂了还是卡慢）；通常以告警、异常项、巡检报告作为判断依据，或进入数据库后台进行分析
+
+**【所想】** 如果设备众多，短时间很难定位具体是哪些；如果问题不清晰，容易出现部门扯皮，业务、网络、系统数据库人员轮番排查；排查专业门槛高，团队排查能力弱
+
+**【痛点】** 定位难、沟通难。业务和资产众多时难以定位；原因不清晰/复杂时需要多方协查，沟通效率低下，容易扯皮
+
+**【需求】** 快速准确地定位问题根源及影响面
+
+> 💡 **【点子】**
+>
+> **资源关系拓扑图：** 自动绘制数据库与周边资源（应用、网络、服务器）的依赖拓扑，故障时一键定位影响范围
+
+***
+
+### 2.2 根因分析
+
+**【用户】** ⭐⭐ **数据库运维 DBA** / ⭐⭐ **系统运维工程师**
+
+**【所做 1】** 按维度依次分析数据库指标（查询、CPU、内存、磁盘等），运用各维度的看指标逻辑定位问题（如查询维度先看慢查询数量、再看高频查询模板、最后看历史会话定位问题 SQL）
+
+**【所想】** 监控其实还是比较准的，但是问题是监控到的现象，比如速率降低，具体是什么原因比较难分析，可能是多个因素导致；经常遇到 SQL 语句无法执行的问题，不好排查，而且容易扯皮
+
+**【痛点】** 分析难。分析需要深入数据库内部分析会话、SQL、锁情况，繁琐且专业难度高，不能保证团队的 DBA 精通全部类型数据库和问题
+
+**【需求】** 平台能够自动分析根因，给出明确的诊断结论，降低对 DBA 个人经验的依赖
+
+> 💡 **【点子】**
+>
+> **智能根因分析：** 基于多维指标关联分析，自动定位问题根因（SQL、锁、资源瓶颈等），输出诊断报告
+
+**【所做 2】** 准确定位问题后立即恢复业务；暂时无法定位时先保存环境配置，通过 kill 会话或重启等方式临时恢复业务
+
+**【所想】** 监控报表不仅需要呈现指标现状，最好还可以直接暴露存在问题或风险的地方，能够有一些结论
+
+**【痛点】** 处置难。不清楚处置方案是否能从根本解决问题，只能凭借已有的经验，问题可能会再次出现
+
+**【需求】** 平台能够根据诊断结果推荐处置方案，并评估方案的彻底性和风险
+
+> 💡 **【点子】**
+>
+> **处置方案推荐：** 基于根因分析结果，自动推荐处置方案（kill 会话、扩容、索引优化等），并标注方案彻底性和风险等级
+
+**【所做 3】** 协调系统运维工程师协助排查网络、服务器、机房等相关设备和指标
+
+***
+
+## 阶段 3 / 业务恢复、风险优化
+
+### 3.1 业务恢复
+
+**【用户】** ⭐⭐ **数据库运维 DBA** / ⭐⭐ **系统运维工程师** / ⭐ **业务运营人员**
+
+**【所做 1】** 根据异常类型采取不同处置措施：资源规格和配置问题则扩容或修改配置；SQL 问题则 kill 会话；软件版本及其他问题则找第三方厂商处理
+
+**【所想】** 有没有能够一键恢复业务的操作？能够快速恢复业务；如果要到物理服务器上进行操作，就会比较麻烦
+
+**【痛点】** 处置操作存在门槛，或依赖第三方时效低。部分操作需要登入数据库后台执行 SQL，非单一问题且不熟悉时需要联系其他同事/厂商
+
+**【需求】** 一键处置 + 处置过程可视化，简单、高效地修复问题，减少故障对业务造成的影响
+
+> 💡 **【点子】**
+>
+> **一键处置：** 提供常用处置操作的一键执行能力（kill 会话、扩容、参数调整等），无需登录后台
+>
+> **处置过程可视化：** 处置操作全程可视化展示，每一步操作的影响范围和风险提示一目了然
+
+**【所做 2】** 处置异常过程中寻求系统运维工程师协助，比如重启设备或修改网络配置等
+
+**【所做 3】** 跟业务运营人员验证业务已恢复
+
+
+***
+
+### 3.2 复盘和优化
+
+**【用户】** ⭐⭐ **数据库运维 DBA** / ⭐ **IT 运维主管/CIO**
+
+**【所做 1】** 通常按季度汇报，总结周期内出现的问题，针对频发问题分析共性原因并提供解决方案；由 IT 部运维主管/CIO 等确认后续是否优化
+
+**【所做 2】** 协同业务部门优化业务 SQL，协同 SRE 工程师进行高可用改造或添加存储盘等
+
+
+***</pre>
+          </div>
+        </div>
+        <div class="highlight-box">
+          <h4>特点</h4>
+          <p>纯文本 Markdown 格式，配合 AI Skill 辅助生成；纯文本，兼容所有文档系统，无需依赖特定编辑器；AI 辅助生成，基于业务场景快速输出完整初稿</p>
+          <h4>使用方式</h4>
+          <ol>
+            <li><a href="用户旅程案例与模板/用户旅程图SKILL.md" download class="text-link">下载</a>并安装"用户旅程图 Skill"</li>
+            <li>向 AI 提供关键信息：<strong>产品类型与名称</strong>、<strong>目标用户</strong>、<strong>场景名称</strong>、<strong>场景描述</strong>、<strong>梳理方式</strong>（用户访谈/竞品资料/业务推演）</li>
+            <li>AI 先生成旅程框架（角色、阶段划分），确认后再一次性生成完整初稿</li>
+          </ol>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <div class="divider"></div>
+
+  <!-- 实践技巧 -->
+  <section class="section" id="tips">
+    <div class="section-number">04 / 实践建议</div>
+    <h2>实践技巧</h2>
+    <div class="tips-box">
+      <div class="tips-list">
+        <div class="tips-item">
+          <div class="tips-dot purple"></div>
+          <div>
+            <h4>基于事实推导</h4>
+            <p>通过观察、访谈获取一手信息，及时记录（录音、拍照、截图），避免凭主观经验替代用户真实反馈</p>
+          </div>
+        </div>
+        <div class="tips-item">
+          <div class="tips-dot blue"></div>
+          <div>
+            <h4>渐进式完善</h4>
+            <p>无需等待调研全部完成，可先搭建初步框架，随信息补充逐步迭代，新增样本不再提供新信息时即视为饱和</p>
+          </div>
+        </div>
+        <div class="tips-item">
+          <div class="tips-dot green"></div>
+          <div>
+            <h4>归纳而非罗列</h4>
+            <p>对原始调研数据进行清洗与归纳，聚焦与目标场景强相关的信息，提炼共性问题，避免照搬访谈原文</p>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+</main>
+
+<footer class="footer">
+  <p>以用户旅程为核心的轻量化设计思维方法 &copy; 2026</p>
+  <p class="footer-dept">云BG产品设计部</p>
+</footer>
+
+<!-- Image Preview Modal -->
+<div class="img-preview-modal" id="imgPreviewModal" onclick="closePreview()">
+  <button class="img-preview-close" onclick="closePreview()"><i class="ri-close-line"></i></button>
+  <img id="imgPreviewImage" src="" alt="预览">
+</div>
+
+<script>
+// Tab switching
+document.querySelectorAll('.tab-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const tabId = btn.dataset.tab;
+    document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById(tabId).classList.add('active');
+  });
+});
+
+// Image preview
+function openPreview(src) {
+  document.getElementById('imgPreviewImage').src = src;
+  document.getElementById('imgPreviewModal').classList.add('active');
+  document.body.style.overflow = 'hidden';
+}
+function closePreview() {
+  document.getElementById('imgPreviewModal').classList.remove('active');
+  document.body.style.overflow = '';
+}
+document.addEventListener('keydown', function(e) {
+  if (e.key === 'Escape') closePreview();
+});
+
+// Right side anchor — highlight active section
+const sideLinks = document.querySelectorAll('.side-nav a');
+const sections = [];
+sideLinks.forEach(link => {
+  const id = link.getAttribute('href').slice(1);
+  const el = document.getElementById(id);
+  if (el) sections.push({ el, link });
+});
+
+function updateActiveLink() {
+  const scrollY = window.scrollY + 120;
+  let active = sections[0];
+  for (const s of sections) {
+    if (s.el.offsetTop <= scrollY) active = s;
+  }
+  sideLinks.forEach(l => l.classList.remove('active'));
+  if (active) active.link.classList.add('active');
+}
+
+window.addEventListener('scroll', updateActiveLink);
+updateActiveLink();
+
+// Mouse glow effect
+const mouseGlow = document.createElement('div');
+mouseGlow.className = 'mouse-glow';
+document.body.appendChild(mouseGlow);
+
+let mouseX = 0;
+let mouseY = 0;
+let glowX = 0;
+let glowY = 0;
+
+function updateGlow() {
+  glowX += (mouseX - glowX) * 0.15;
+  glowY += (mouseY - glowY) * 0.15;
+  mouseGlow.style.left = glowX + 'px';
+  mouseGlow.style.top = glowY + 'px';
+  requestAnimationFrame(updateGlow);
+}
+
+document.addEventListener('mousemove', (e) => {
+  mouseX = e.clientX;
+  mouseY = e.clientY;
+});
+
+document.addEventListener('mouseover', (e) => {
+  const target = e.target;
+  if (target.tagName === 'A' || target.tagName === 'BUTTON' || target.closest('a') || target.closest('button')) {
+    mouseGlow.classList.add('hovering');
+  } else {
+    mouseGlow.classList.remove('hovering');
+  }
+});
+
+updateGlow();
+
+// Custom tooltip
+const tooltip = document.createElement('div');
+tooltip.className = 'custom-tooltip';
+document.body.appendChild(tooltip);
+
+document.querySelectorAll('[data-tooltip]').forEach(el => {
+  el.addEventListener('mouseenter', (e) => {
+    const text = el.getAttribute('data-tooltip');
+    tooltip.textContent = text;
+    tooltip.classList.add('visible');
+    // 固定显示在元素下方中央
+    const rect = el.getBoundingClientRect();
+    const x = rect.left + rect.width / 2 - tooltip.offsetWidth / 2;
+    const y = rect.bottom + 8;
+    tooltip.style.left = x + 'px';
+    tooltip.style.top = y + 'px';
+  });
+
+  el.addEventListener('mouseleave', () => {
+    tooltip.classList.remove('visible');
+  });
+});
+
+// Markdown view toggle
+document.querySelectorAll('.markdown-view-btn').forEach(btn => {
+  btn.addEventListener('click', () => {
+    const view = btn.dataset.view;
+    const previewMode = document.getElementById('markdown-preview-mode');
+    const textMode = document.getElementById('markdown-text-mode');
+    
+    // Update button states
+    document.querySelectorAll('.markdown-view-btn').forEach(b => b.classList.remove('active'));
+    btn.classList.add('active');
+    
+    // Toggle views
+    if (view === 'preview') {
+      previewMode.style.display = 'block';
+      textMode.style.display = 'none';
+    } else {
+      previewMode.style.display = 'none';
+      textMode.style.display = 'block';
+    }
+  });
+});
+</script>
+
+</body>
+</html>

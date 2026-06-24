@@ -1,0 +1,21 @@
+# 系统文件
+.DS_Store
+Thumbs.db
+
+# Git 目录
+.git/
+
+# 不需要上传的目录
+html-anything/
+html-anything-skill/
+skill-finder/
+废弃文件/
+
+# 不需要的文档文件
+*.docx
+*.pdf
+
+# 大图片
+原始用户旅程.jpg
+选型对比.png
+选型建议.png
