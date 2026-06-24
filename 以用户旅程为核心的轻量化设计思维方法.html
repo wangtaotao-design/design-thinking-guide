@@ -790,7 +790,7 @@ code { font-family: var(--font-mono); font-size: 13px; background: rgba(120, 184
         <div class="template-intro">
           <p>更适合AI 工作流场景，无格式限制，便于衔接 AI 工具继续做Demo 输出等环节。</p>
           <div class="template-actions">
-            <a href="https://raw.githubusercontent.com/wangtaotao-design/design-thinking-guide/master/%E7%94%A8%E6%88%B7%E6%97%85%E7%A8%8B%E6%A1%88%E4%BE%8B%E4%B8%8E%E6%A8%A1%E6%9D%BF/%E7%94%A8%E6%88%B7%E6%97%85%E7%A8%8B%E5%9B%BESKILL.md" download class="template-btn"><i class="ri-download-2-line"></i> 下载 Skill</a>
+            <a href="https://raw.githubusercontent.com/wangtaotao-design/design-thinking-guide/master/%E7%94%A8%E6%88%B7%E6%97%85%E7%A8%8B%E6%A1%88%E4%BE%8B%E4%B8%8E%E6%A8%A1%E6%9D%BF/%E7%94%A8%E6%88%B7%E6%97%85%E7%A8%8B%E5%9B%BESKILL.md" download="用户旅程图SKILL.md" class="template-btn" onclick="forceDownload(event, this)"><i class="ri-download-2-line"></i> 下载 Skill</a>
           </div>
         </div>
         <div class="template-screenshot markdown-preview-container">
@@ -1184,6 +1184,30 @@ function closePreview() {
 document.addEventListener('keydown', function(e) {
   if (e.key === 'Escape') closePreview();
 });
+
+// Force download function
+function forceDownload(event, link) {
+  event.preventDefault();
+  const url = link.href;
+  const fileName = link.download || 'download.md';
+  
+  fetch(url)
+    .then(response => response.blob())
+    .then(blob => {
+      const blobUrl = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = blobUrl;
+      a.download = fileName;
+      document.body.appendChild(a);
+      a.click();
+      document.body.removeChild(a);
+      window.URL.revokeObjectURL(blobUrl);
+    })
+    .catch(error => {
+      console.error('Download failed:', error);
+      window.open(url, '_blank');
+    });
+}
 
 // Right side anchor — highlight active section
 const sideLinks = document.querySelectorAll('.side-nav a');
