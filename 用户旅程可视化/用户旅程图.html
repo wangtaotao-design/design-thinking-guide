@@ -1,0 +1,1621 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>用户旅程图</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&family=Noto+Sans+SC:wght@300;400;500;600;700;900&family=JetBrains+Mono:wght@400;500;700&family=Space+Grotesk:wght@400;500;600;700&display=swap" rel="stylesheet">
+<link href="https://cdn.jsdelivr.net/npm/remixicon@4.6.0/fonts/remixicon.css" rel="stylesheet">
+<style>
+:root {
+  --bg: #0a0c10;
+  --bg-elevated: #13161f;
+  --bg-card: #181c28;
+  --border: #1e2333;
+  --border-strong: #2a3045;
+  --text-primary: #e6edf3;
+  --text-secondary: #8b949e;
+  --text-tertiary: #555d6b;
+  --accent: #4d8fff;
+  --accent-2: #78b8ff;
+  --accent-3: #b0d6ff;
+  --accent-blue: #78b8ff;
+  --accent-green: #34d399;
+  --accent-purple: #a78bfa;
+  --accent-orange: #f59e0b;
+  --accent-cyan: #22d3ee;
+  --accent-pink: #f472b6;
+  --accent-sky: #4dc8ff;
+  --accent-red: #ef4444;
+  --grad-accent: linear-gradient(135deg, #78b8ff 0%, #4dc8ff 40%, #34d399 100%);
+  --grad-bg: radial-gradient(ellipse at 30% 20%, rgba(77, 143, 255, 0.12) 0%, transparent 55%),
+              radial-gradient(ellipse at 70% 60%, rgba(77, 200, 255, 0.08) 0%, transparent 55%);
+  --radius: 16px;
+  --radius-sm: 10px;
+  --radius-lg: 24px;
+  --font-sans: 'Inter', 'Noto Sans SC', -apple-system, BlinkMacSystemFont, sans-serif;
+  --font-mono: 'JetBrains Mono', 'Space Grotesk', SFMono-Regular, monospace;
+  --ease: cubic-bezier(.4, 0, .2, 1);
+  /* Stage column tints */
+  --stage1-tint: rgba(77, 143, 255, 0.04);
+  --stage2-tint: rgba(96, 165, 250, 0.04);
+  --stage3-tint: rgba(167, 139, 250, 0.04);
+  --stage1-border: rgba(77, 143, 255, 0.15);
+  --stage2-border: rgba(96, 165, 250, 0.15);
+  --stage3-border: rgba(167, 139, 250, 0.15);
+}
+
+*, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+html {
+  scroll-behavior: smooth;
+  background: var(--bg);
+  color: var(--text-primary);
+  font-family: var(--font-sans);
+  font-weight: 400;
+  line-height: 1.75;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+body {
+  min-height: 100vh;
+  background: var(--bg);
+  position: relative;
+}
+
+body::before {
+  content: '';
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 1400px 1000px at -5% 5%, rgba(78, 143, 255, 0.12) 0%, transparent 45%),
+    radial-gradient(ellipse 900px 700px at 95% 45%, rgba(167, 139, 250, 0.12) 0%, transparent 50%),
+    radial-gradient(ellipse 600px 500px at 50% 95%, rgba(52, 211, 153, 0.08) 0%, transparent 50%);
+}
+
+.grid-lines {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background-image:
+    linear-gradient(rgba(120, 184, 255, 0.08) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(120, 184, 255, 0.08) 1px, transparent 1px);
+  background-size: 60px 60px;
+  mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 100%);
+  -webkit-mask-image: linear-gradient(to bottom, rgba(0,0,0,1) 0%, rgba(0,0,0,0.5) 100%);
+}
+
+/* Navigation */
+.nav {
+  position: fixed;
+  top: 0; left: 0; right: 0; z-index: 100;
+  background: rgba(10, 12, 16, 0.85);
+  backdrop-filter: blur(20px) saturate(180%);
+  border-bottom: 1px solid var(--border);
+  padding: 0 32px; height: 56px;
+  display: flex; align-items: center; justify-content: space-between;
+}
+.nav-brand { font-size: 14px; font-weight: 600; color: var(--text-secondary); letter-spacing: 0.04em; display: flex; align-items: center; gap: 10px; }
+.nav-brand-dot { width: 8px; height: 8px; border-radius: 50%; background: var(--accent-2); box-shadow: 0 0 12px rgba(120, 184, 255, 0.5); }
+.nav-tag { font-size: 11px; font-weight: 600; letter-spacing: 0.08em; text-transform: uppercase; color: var(--accent-3); background: rgba(77, 143, 255, 0.12); border: 1px solid rgba(120, 184, 255, 0.25); padding: 4px 14px; border-radius: 999px; }
+
+/* ========== MAIN CONTENT ========== */
+.content-wrapper { position: relative; z-index: 1; max-width: 1600px; margin: 0 auto; padding: 100px 40px 100px; }
+
+/* Header */
+.journey-header { margin-bottom: 48px; }
+.journey-header h1 { font-size: 42px; font-weight: 800; line-height: 1.15; letter-spacing: -0.02em; margin-bottom: 12px; background: linear-gradient(135deg, #78b8ff 0%, #4d8fff 30%, #8b5cf6 80%, #a78bfa 100%); -webkit-background-clip: text; background-clip: text; -webkit-text-fill-color: transparent; }
+.journey-meta { display: flex; flex-wrap: wrap; gap: 16px; margin-top: 20px; }
+.journey-meta-item { display: flex; align-items: center; gap: 8px; font-size: 14px; color: var(--text-secondary); background: var(--bg-card); border: 1px solid var(--border); border-radius: 8px; padding: 8px 16px; }
+.journey-meta-item i { color: var(--accent-2); font-size: 16px; }
+.journey-meta-item strong { color: var(--text-primary); margin-right: 4px; }
+
+.scenario-box { background: linear-gradient(135deg, rgba(77, 143, 255, 0.08) 0%, rgba(52, 211, 153, 0.06) 100%); border: 1px solid rgba(120, 184, 255, 0.25); border-radius: var(--radius-sm); padding: 16px 20px; margin-bottom: 40px; }
+.scenario-box p { font-size: 14px; color: var(--text-secondary); line-height: 1.7; margin: 0; }
+.scenario-box strong { color: var(--accent-3); }
+
+/* ========== SWIMLANE TABLE ========== */
+.journey-table-wrap {
+  overflow-x: auto;
+  border-radius: var(--radius);
+  border: 1px solid var(--border-strong);
+  background: var(--bg-card);
+  position: relative;
+}
+
+.journey-table {
+  width: 100%;
+  min-width: 1400px;
+  border-collapse: collapse;
+  table-layout: fixed;
+}
+
+/* Label column */
+.journey-table th.label-col {
+  width: 100px;
+  min-width: 100px;
+  background: var(--bg-elevated);
+  padding: 14px 10px;
+  text-align: center;
+  font-size: 12px;
+  font-weight: 700;
+  color: var(--text-primary);
+  border-right: 2px solid var(--border-strong);
+  vertical-align: middle;
+  letter-spacing: 0.04em;
+}
+.label-col .label-icon { display: block; font-size: 18px; margin-bottom: 4px; }
+
+/* ---------- Role column (second column) ---------- */
+.journey-table th.role-col {
+  width: 70px;
+  min-width: 70px;
+  background: var(--bg-card);
+  padding: 10px 8px;
+  text-align: center;
+  font-size: 11px;
+  font-weight: 600;
+  color: var(--text-secondary);
+  border-right: 1px solid var(--border);
+  vertical-align: middle;
+}
+.role-col .label-icon { display: block; font-size: 14px; margin-bottom: 2px; }
+.role-col.type-role-action { color: var(--accent-orange); }
+
+/* ---------- Stage header ---------- */
+.journey-table th.stage-header {
+  padding: 10px 8px;
+  text-align: center;
+  vertical-align: middle;
+  position: relative;
+}
+.stage-header.s1 { background: #3b82f6; }
+.stage-header.s2 { background: #60a5fa; }
+.stage-header.s3 { background: #3b82f6; }
+.stage-header .stage-name {
+  font-size: 14px;
+  font-weight: 700;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+}
+
+/* ---------- Sub-stage header ---------- */
+.journey-table th.sub-stage-header {
+  padding: 10px 8px;
+  text-align: center;
+  border-bottom: 1px solid var(--border);
+  border-right: 1px solid var(--border);
+  white-space: nowrap;
+}
+.sub-stage-header.s1 {
+  background: rgba(77, 143, 255, 0.06);
+}
+.sub-stage-header.s2 {
+  background: rgba(96, 165, 250, 0.05);
+}
+.sub-stage-header.s3 {
+  background: rgba(77, 143, 255, 0.06);
+}
+.sub-stage-header .sub-stage-name {
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--accent-3);
+}
+
+/* ---------- Data cells: stage-based background ---------- */
+.journey-table td.data-cell {
+  padding: 10px 6px;
+  vertical-align: middle;
+  border-bottom: 1px solid var(--border);
+  font-size: 12px;
+  color: var(--text-secondary);
+  line-height: 1.6;
+  transition: background 0.2s var(--ease);
+  overflow: visible;
+}
+.journey-table td.data-cell:hover {
+  filter: brightness(1.3);
+}
+td.data-cell.s1 { background: rgba(77, 143, 255, 0.06); border-left: 1px solid rgba(77, 143, 255, 0.2); }
+td.data-cell.s2 { background: rgba(96, 165, 250, 0.05); border-left: 1px solid rgba(96, 165, 250, 0.2); }
+td.data-cell.s3 { background: rgba(77, 143, 255, 0.06); border-left: 1px solid rgba(77, 143, 255, 0.2); }
+
+/* First column of each stage: stronger left border */
+td.data-cell.stage-start { border-left-width: 2px; }
+
+/* ========== ACTION CARD (rectangle) ========== */
+.action-card {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  padding: 8px 10px;
+  background: var(--bg-elevated);
+  border: 1px solid var(--border-strong);
+  border-radius: 6px;
+  font-size: 12px;
+  font-weight: 500;
+  color: var(--text-primary);
+  cursor: default;
+  transition: all 0.2s var(--ease);
+  position: relative;
+  white-space: nowrap;
+  min-width: 0;
+  text-align: center;
+  line-height: 1.4;
+}
+.action-card:hover {
+  border-color: var(--accent-orange);
+  background: rgba(245, 158, 11, 0.08);
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.15);
+  transform: translateY(-1px);
+  z-index: 5;
+}
+
+/* Role-specific action card colors */
+.action-card.role-a {
+  background: rgba(245, 158, 11, 0.1);
+  border-color: rgba(245, 158, 11, 0.25);
+  color: #fcd34d;
+}
+.action-card.role-b {
+  background: rgba(34, 211, 238, 0.08);
+  border-color: rgba(34, 211, 238, 0.22);
+  color: #67e8f9;
+}
+.action-card .card-text {
+  white-space: normal;
+}
+
+/* Action card flow container */
+.action-flow {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  width: 100%;
+}
+.action-flow .action-card {
+  flex: 1;
+}
+.action-flow .flow-arrow {
+  flex-shrink: 0;
+  width: 30px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+}
+.action-flow .flow-arrow::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 50%;
+  width: 100%;
+  height: 2px;
+  background: var(--text-secondary);
+  transform: translateY(-50%);
+}
+.action-flow .flow-arrow::after {
+  content: '';
+  position: absolute;
+  right: 0;
+  top: 50%;
+  transform: translateY(-50%);
+  width: 0;
+  height: 0;
+  border-top: 5px solid transparent;
+  border-bottom: 5px solid transparent;
+  border-left: 6px solid var(--text-secondary);
+}
+
+/* Cross-sub-stage/stage arrow: between adjacent tds that both have action cards - handled by JS */
+.data-cell {
+  position: relative;
+}
+
+/* Cross-role vertical arrow: between role A and role B action cards in same column */
+.role-connector {
+  position: absolute;
+  bottom: -14px;
+  left: 50%;
+  transform: translateX(-50%);
+  width: 0;
+  height: 0;
+  z-index: 2;
+  pointer-events: none;
+}
+.role-connector::before {
+  content: '';
+  display: block;
+  position: absolute;
+  left: -1px;
+  top: 0;
+  width: 2px;
+  height: 12px;
+  background: var(--text-secondary);
+}
+.role-connector::after {
+  content: '';
+  display: block;
+  position: absolute;
+  left: -4px;
+  top: 10px;
+  width: 0;
+  height: 0;
+  border-left: 4px solid transparent;
+  border-right: 4px solid transparent;
+  border-top: 5px solid var(--text-secondary);
+}
+
+/* Empty / no-action cell */
+.data-cell.empty-cell {
+  opacity: 0.25;
+  text-align: center;
+  color: var(--text-tertiary);
+  font-size: 14px;
+}
+
+/* Column highlight on hover */
+.data-cell.col-highlight {
+  background: rgba(255, 255, 255, 0.05) !important;
+  box-shadow: inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+}
+[data-step-role="role-a"].action-card.col-highlight {
+  border-color: var(--accent-orange) !important;
+  box-shadow: 0 0 12px rgba(245, 158, 11, 0.25) !important;
+}
+[data-step-role="role-b"].action-card.col-highlight {
+  border-color: #22d3ee !important;
+  box-shadow: 0 0 12px rgba(34, 211, 238, 0.25) !important;
+}
+[data-step-role="role-a"].col-highlight {
+  background: rgba(245, 158, 11, 0.06) !important;
+  box-shadow: inset 0 0 0 1px rgba(245, 158, 11, 0.2);
+}
+[data-step-role="role-b"].col-highlight {
+  background: rgba(34, 211, 238, 0.06) !important;
+  box-shadow: inset 0 0 0 1px rgba(34, 211, 238, 0.2);
+}
+
+/* ========== THINK & PAIN ROWS ========== */
+.think-item {
+  display: none; /* hidden — shown in emotion curve tooltip on hover */
+  margin-bottom: 6px;
+  padding-left: 12px;
+  position: relative;
+  font-style: italic;
+  color: var(--text-tertiary);
+  font-size: 12px;
+  line-height: 1.5;
+}
+/* role indicator dot for think only */
+.think-item[data-step-role="role-a"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: var(--accent-orange);
+}
+.think-item[data-step-role="role-b"]::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: #22d3ee;
+}
+/* separator between different role items in same td */
+.think-item[data-step-role] + .think-item[data-step-role],
+.pain-item[data-step-role] + .pain-item[data-step-role] {
+  padding-top: 6px;
+  border-top: 1px dashed rgba(255,255,255,0.06);
+}
+.think-item:last-child, .pain-item:last-child { margin-bottom: 0; }
+
+.pain-item {
+  margin-bottom: 6px;
+  padding: 8px 10px;
+  background: rgba(239, 68, 68, 0.06);
+  border-left: 2px solid rgba(239, 68, 68, 0.3);
+  border-radius: 0 4px 4px 0;
+  font-size: 11px;
+  color: var(--text-secondary);
+  line-height: 1.5;
+}
+
+/* Row separator */
+.journey-table tr.row-sep td,
+.journey-table tr.row-sep th {
+  height: 0;
+  padding: 0;
+  border-bottom: 1px solid var(--border-strong);
+}
+
+/* Label colors */
+.label-col.type-role-action { color: var(--accent-orange); }
+.label-col.type-think { color: var(--accent-green); }
+.label-col.type-pain { color: var(--accent-red); }
+.label-col.type-need { color: var(--accent-purple); }
+.label-col.type-idea { color: var(--accent-sky); }
+
+/* Need items */
+.need-item {
+  font-size: 11px;
+  color: var(--accent-purple);
+  padding: 4px 6px;
+  background: rgba(167, 139, 250, 0.08);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  border-left: 2px solid var(--accent-purple);
+}
+.need-item:last-child { margin-bottom: 0; }
+
+/* Idea items */
+.idea-item {
+  font-size: 11px;
+  color: var(--accent-orange);
+  padding: 4px 6px;
+  background: rgba(245, 158, 11, 0.08);
+  border-radius: 4px;
+  margin-bottom: 4px;
+  border-left: 2px solid var(--accent-orange);
+}
+.idea-item:last-child { margin-bottom: 0; }
+
+/* ========== CUSTOM TOOLTIP ========== */
+.action-tooltip {
+  position: fixed;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: 10px 14px;
+  border-radius: 8px;
+  font-size: 13px;
+  font-weight: 400;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10000;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  white-space: normal;
+  max-width: 280px;
+  line-height: 1.6;
+}
+.action-tooltip.visible { opacity: 1; transform: translateY(0); }
+.action-tooltip .tooltip-desc {
+  color: var(--text-secondary);
+  font-size: 12px;
+}
+
+/* Footer */
+.footer { position: relative; z-index: 1; text-align: center; padding: 48px 40px; border-top: 1px solid var(--border); color: var(--text-tertiary); font-size: 13px; margin-top: 80px; }
+
+/* Scrollbar */
+::-webkit-scrollbar { width: 6px; height: 6px; }
+::-webkit-scrollbar-track { background: var(--bg); }
+::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 3px; }
+::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+
+/* Responsive */
+@media (max-width: 768px) {
+  .content-wrapper { padding: 80px 16px 60px; }
+  .journey-header h1 { font-size: 28px; }
+  .journey-table { min-width: 1000px; }
+  .journey-table th.label-col { width: 70px; min-width: 70px; font-size: 10px; }
+  .stage-header .stage-name { font-size: 13px; }
+  .sub-stage-header .sub-stage-name { font-size: 11px; }
+  .action-card { font-size: 10px; padding: 6px 8px; }
+  .nav { padding: 0 16px; }
+}
+
+/* ========== EMOTION CURVE ========== */
+.emotion-curve-overlay {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  pointer-events: none;
+  z-index: 5;
+}
+.emotion-curve-svg {
+  position: absolute;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+}
+
+/* Emotion curve line */
+.emotion-curve-line {
+  fill: none;
+  stroke: url(#emotionGradient);
+  stroke-width: 2.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  filter: drop-shadow(0 0 6px rgba(120, 184, 255, 0.4));
+}
+
+/* Emotion curve fill area */
+.emotion-curve-area {
+  fill: url(#emotionAreaGradient);
+  opacity: 0.25;
+}
+
+/* Emotion dots */
+.emotion-dot-group {
+  pointer-events: auto;
+  cursor: pointer;
+}
+.emotion-dot-outer {
+  fill: var(--bg-card);
+  stroke: var(--accent-2);
+  stroke-width: 2;
+  transition: all 0.2s var(--ease);
+}
+.emotion-dot-inner {
+  fill: var(--accent-2);
+  transition: all 0.2s var(--ease);
+}
+.emotion-dot-group:hover .emotion-dot-outer {
+  fill: var(--accent-2);
+  stroke: var(--accent-3);
+  filter: drop-shadow(0 0 8px rgba(120, 184, 255, 0.6));
+}
+.emotion-dot-group:hover .emotion-dot-inner {
+  fill: #fff;
+}
+
+/* Emotion score label below dot */
+.emotion-score-label {
+  font-size: 10px;
+  font-weight: 600;
+  fill: var(--text-secondary);
+  text-anchor: middle;
+  transition: fill 0.2s var(--ease);
+}
+.emotion-dot-group:hover .emotion-score-label {
+  fill: var(--accent-3);
+}
+
+/* Emotion level indicators (Y-axis) */
+.emotion-y-labels {
+  position: absolute;
+  left: 0;
+  top: 0;
+  bottom: 0;
+  width: 100%;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  padding: 4px 0;
+  pointer-events: none;
+}
+.emotion-y-label {
+  font-size: 9px;
+  color: var(--text-tertiary);
+  opacity: 0.5;
+}
+
+/* ========== EMOTION TOOLTIP ========== */
+.emotion-tooltip {
+  position: fixed;
+  background: var(--bg-elevated);
+  color: var(--text-primary);
+  padding: 12px 16px;
+  border-radius: 10px;
+  font-size: 13px;
+  border: 1px solid var(--border-strong);
+  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.5);
+  pointer-events: none;
+  z-index: 10001;
+  opacity: 0;
+  transform: translateY(6px);
+  transition: opacity 0.15s ease, transform 0.15s ease;
+  max-width: 320px;
+  line-height: 1.6;
+}
+.emotion-tooltip.visible {
+  opacity: 1;
+  transform: translateY(0);
+}
+.emotion-tooltip .et-score {
+  font-size: 20px;
+  font-weight: 700;
+  background: linear-gradient(135deg, #78b8ff 0%, #34d399 100%);
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  margin-bottom: 6px;
+}
+.emotion-tooltip .et-think {
+  color: var(--text-secondary);
+  font-size: 12px;
+  margin-bottom: 4px;
+  padding-left: 12px;
+  position: relative;
+}
+.emotion-tooltip .et-think::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 6px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-green);
+}
+.emotion-tooltip .et-pain {
+  color: var(--accent-red);
+  font-size: 11px;
+  padding-left: 12px;
+  position: relative;
+}
+.emotion-tooltip .et-pain::before {
+  content: '';
+  position: absolute;
+  left: 0;
+  top: 5px;
+  width: 5px;
+  height: 5px;
+  border-radius: 50%;
+  background: var(--accent-red);
+}
+.emotion-tooltip .et-section-label {
+  font-size: 10px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--text-tertiary);
+  margin-top: 8px;
+  margin-bottom: 2px;
+}
+.emotion-tooltip .et-section-label:first-child {
+  margin-top: 0;
+}
+
+@media print {
+  body::before { display: none; }
+  .nav { display: none; }
+  .content-wrapper { padding: 20px; }
+  .journey-table-wrap { overflow-x: visible; }
+  .emotion-curve-overlay { display: none; }
+  .emotion-tooltip { display: none; }
+}
+</style>
+</head>
+<body>
+
+<div class="grid-lines"></div>
+
+<nav class="nav">
+  <div class="nav-brand">
+    <span class="nav-brand-dot"></span>
+    用户旅程图
+  </div>
+  <span class="nav-tag">User Journey Map</span>
+</nav>
+
+<main class="content-wrapper">
+
+  <!-- Header -->
+  <div class="journey-header">
+    <h1>【产品名称】- 【场景名称】用户旅程图</h1>
+    <div class="journey-meta">
+      <div class="journey-meta-item">
+        <i class="ri-smartphone-line"></i>
+        <strong>产品：</strong>产品名称
+      </div>
+      <div class="journey-meta-item">
+        <i class="ri-user-3-line"></i>
+        <strong>目标用户：</strong>⭐⭐ 角色A（核心用户）、⭐ 角色B（参与用户）
+      </div>
+      <div class="journey-meta-item">
+        <i class="ri-calendar-line"></i>
+        <strong>版本：</strong>v1.0 / 2026-06-29
+      </div>
+    </div>
+  </div>
+
+  <!-- Scenario -->
+  <div class="scenario-box">
+    <p><strong>场景说明：</strong>描述本次用户旅程的业务背景、解决什么问题。覆盖范围从阶段A到阶段B，完整呈现用户在该场景下的操作路径与体验。</p>
+  </div>
+
+  <!-- ========== SWIMLANE TABLE ========== -->
+  <!--
+    Column layout (10 所做 steps):
+    Stage 1 (colspan=4, #1-4)  → S1.1 (colspan=2, 所做1,2) + S1.2 (colspan=2, 所做3,4)
+    Stage 2 (colspan=3, #5-7)  → S2.1 (colspan=2, 所做5,6) + S2.2 (colspan=1, 所做7)
+    Stage 3 (colspan=3, #8-10) → S3.1 (colspan=1, 所做8)     + S3.2 (colspan=2, 所做9,10)
+  -->
+  <div class="journey-table-wrap">
+    <table class="journey-table">
+      <thead>
+        <!-- Stage header row -->
+        <tr>
+          <th class="label-col" colspan="2" style="border-bottom:2px solid var(--border-strong);">阶段</th>
+          <th class="stage-header s1" colspan="4">
+            <span class="stage-name">1. 阶段名称占位</span>
+          </th>
+          <th class="stage-header s2" colspan="3">
+            <span class="stage-name">2. 阶段名称占位</span>
+          </th>
+          <th class="stage-header s3" colspan="3">
+            <span class="stage-name">3. 阶段名称占位</span>
+          </th>
+        </tr>
+        <!-- Sub-stage header row -->
+        <tr>
+          <th class="label-col" colspan="2" style="font-size:12px;color:var(--text-secondary);">子阶段</th>
+          <th class="sub-stage-header s1" colspan="2">
+            <span class="sub-stage-name">子阶段名称占位</span>
+          </th>
+          <th class="sub-stage-header s1" colspan="2">
+            <span class="sub-stage-name">子阶段名称占位</span>
+          </th>
+          <th class="sub-stage-header s2" colspan="2">
+            <span class="sub-stage-name">子阶段名称占位</span>
+          </th>
+          <th class="sub-stage-header s2" colspan="1">
+            <span class="sub-stage-name">子阶段名称占位</span>
+          </th>
+          <th class="sub-stage-header s3" colspan="1">
+            <span class="sub-stage-name">子阶段名称占位</span>
+          </th>
+          <th class="sub-stage-header s3" colspan="2">
+            <span class="sub-stage-name">子阶段名称占位</span>
+          </th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr class="row-sep"><th class="label-col" colspan="2"></th><td colspan="10"></td></tr>
+
+        <!-- ====== 角色A ====== -->
+        <tr>
+          <th class="label-col type-role-action" rowspan="2">所做</th>
+          <th class="role-col type-role-action">
+            <span class="label-icon"><i class="ri-user-line"></i></span>
+            角色A
+          </th>
+          <!-- Stage 1, Sub 1.1: 所做1,2 -->
+          <td class="data-cell s1 stage-start" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="0" data-name="提交权限申请" data-desc="用户登录系统后，填写权限申请表，选择需要的资源类型和权限级别，提交后等待审批。">
+                <span class="card-text">提交权限申请</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="1" data-name="等待审批结果" data-desc="用户提交申请后，等待管理员审批，期间可以查看审批进度。审批通过后系统自动开通相应权限。">
+                <span class="card-text">等待审批结果</span>
+              </div>
+            </div>
+          </td>
+          <!-- Stage 1, Sub 1.2: 所做3,4 -->
+          <td class="data-cell s1" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="2" data-name="选择资源配置" data-desc="在权限开通后，用户选择需要的云资源规格和数量，配置网络、存储等基础参数。">
+                <span class="card-text">选择资源配置</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="3" data-name="确认并启动资源" data-desc="用户确认配置无误后，点击启动，系统开始创建和初始化云资源。">
+                <span class="card-text">确认并启动资源</span>
+              </div>
+            </div>
+          </td>
+          <!-- Stage 2, Sub 2.1: 所做5,6 -->
+          <td class="data-cell s2 stage-start" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="4" data-name="收集原始数据" data-desc="用户从多个数据源收集原始训练数据，包括数据库导出、API拉取、文件上传等方式。">
+                <span class="card-text">收集原始数据</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="5" data-name="数据标注" data-desc="用户对收集到的数据进行标注，包括分类标签、边界框标注等，确保数据质量满足训练要求。">
+                <span class="card-text">数据标注</span>
+              </div>
+            </div>
+          </td>
+          <!-- Stage 2, Sub 2.2: 所做7 -->
+          <td class="data-cell s2" colspan="1">
+            <div class="action-card role-a" data-step-role="role-a" data-step-col="6" data-name="校验数据质量" data-desc="用户对标注完成的数据进行质量校验，检查标注准确率、数据分布是否均衡，确保达到训练标准。">
+              <span class="card-text">校验数据质量</span>
+            </div>
+          </td>
+          <!-- Stage 3, Sub 3.1: 所做8 -->
+          <td class="data-cell s3 stage-start" colspan="1">
+            <div class="action-card role-a" data-step-role="role-a" data-step-col="7" data-name="配置训练参数" data-desc="用户设置模型训练的超参数，包括学习率、批次大小、训练轮数等，选择预训练模型和优化器。">
+              <span class="card-text">配置训练参数</span>
+            </div>
+          </td>
+          <!-- Stage 3, Sub 3.2: 所做9,10 -->
+          <td class="data-cell s3" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="8" data-name="启动训练任务" data-desc="用户确认参数配置后，启动训练任务，系统开始分配计算资源并执行训练流程。">
+                <span class="card-text">启动训练任务</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-a" data-step-role="role-a" data-step-col="9" data-name="监控训练进度" data-desc="用户在训练过程中监控损失函数曲线、准确率等指标，根据需要调整参数或提前终止训练。">
+                <span class="card-text">监控训练进度</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <!-- ====== 角色B ====== -->
+        <tr>
+          <th class="role-col type-role-action">
+            <span class="label-icon"><i class="ri-user-line"></i></span>
+            角色B
+          </th>
+          <!-- Stage 1, Sub 1.1: 所做1,2 -->
+          <td class="data-cell s1 stage-start" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-b" data-step-role="role-b" data-step-col="0" data-name="审批权限申请" data-desc="管理员收到权限申请后，审核申请人的身份和申请理由，确认资源需求合理性，决定是否批准。">
+                <span class="card-text">审批权限申请</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-b" data-step-role="role-b" data-step-col="1" data-name="开通权限" data-desc="审批通过后，管理员在系统中为申请人开通对应的资源访问权限，并通知申请人。">
+                <span class="card-text">开通权限</span>
+              </div>
+            </div>
+          </td>
+          <!-- Stage 1, Sub 1.2: 所做3,4 -->
+          <td class="data-cell s1" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-b" data-step-role="role-b" data-step-col="2" data-name="审核资源配置" data-desc="管理员审核用户提交的资源配置方案，评估资源用量和成本是否合理，必要时进行调整。">
+                <span class="card-text">审核资源配置</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-b" data-step-role="role-b" data-step-col="3" data-name="分配资源配额" data-desc="管理员根据审核结果，在系统中分配资源配额，确保资源使用不超出预算限制。">
+                <span class="card-text">分配资源配额</span>
+              </div>
+            </div>
+          </td>
+          <!-- Stage 2, Sub 2.1: 所做5,6 — 角色B不参与 -->
+          <td class="data-cell s2 stage-start empty-cell" colspan="2">—</td>
+          <!-- Stage 2, Sub 2.2: 所做7 — 角色B不参与 -->
+          <td class="data-cell s2 empty-cell" colspan="1">—</td>
+          <!-- Stage 3, Sub 3.1: 所做8 -->
+          <td class="data-cell s3 stage-start" colspan="1">
+            <div class="action-card role-b" data-step-role="role-b" data-step-col="7" data-name="审核训练参数" data-desc="管理员审核训练参数配置的合理性，确保符合安全和合规要求，避免资源滥用。">
+              <span class="card-text">审核训练参数</span>
+            </div>
+          </td>
+          <!-- Stage 3, Sub 3.2: 所做9,10 -->
+          <td class="data-cell s3" colspan="2">
+            <div class="action-flow">
+              <div class="action-card role-b" data-step-role="role-b" data-step-col="8" data-name="审批训练任务" data-desc="管理员收到训练任务启动请求后，审核任务配置和资源使用计划，确认无误后批准执行。">
+                <span class="card-text">审批训练任务</span>
+              </div>
+              <span class="flow-arrow"></span>
+              <div class="action-card role-b" data-step-role="role-b" data-step-col="9" data-name="关注训练状态" data-desc="管理员关注训练任务的资源消耗和运行状态，确保训练任务正常进行，在异常时及时介入。">
+                <span class="card-text">关注训练状态</span>
+              </div>
+            </div>
+          </td>
+        </tr>
+
+        <tr class="row-sep"><th class="label-col" colspan="2"></th><td colspan="10"></td></tr>
+
+        <!-- ====== 所说/所想 ====== -->
+        <tr class="row-think">
+          <th class="label-col type-think" colspan="2">所说/所想</th>
+          <td class="data-cell s1 stage-start" data-step-col="0">
+            <div class="think-item" data-step-role="role-a">提交申请时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">审批申请时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s1" data-step-col="1">
+            <div class="think-item" data-step-role="role-a">等待审批时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">开通权限时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s1" data-step-col="2">
+            <div class="think-item" data-step-role="role-a">选择配置时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">审核配置时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s1" data-step-col="3">
+            <div class="think-item" data-step-role="role-a">启动资源时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">分配配额时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s2 stage-start" data-step-col="4">
+            <div class="think-item" data-step-role="role-a">收集数据时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s2" data-step-col="5">
+            <div class="think-item" data-step-role="role-a">数据标注时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s2" data-step-col="6">
+            <div class="think-item" data-step-role="role-a">校验数据时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s3 stage-start" data-step-col="7">
+            <div class="think-item" data-step-role="role-a">配置参数时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">审核参数时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s3" data-step-col="8">
+            <div class="think-item" data-step-role="role-a">启动训练时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">审批任务时的真实想法，完整交代因果关系</div>
+          </td>
+          <td class="data-cell s3" data-step-col="9">
+            <div class="think-item" data-step-role="role-a">监控进度时的真实想法，完整交代因果关系</div>
+            <div class="think-item" data-step-role="role-b">关注状态时的真实想法，完整交代因果关系</div>
+          </td>
+        </tr>
+
+        <tr class="row-sep"><th class="label-col" colspan="2"></th><td colspan="10"></td></tr>
+
+        <!-- ====== 痛点 ====== -->
+        <tr class="row-pain">
+          <th class="label-col type-pain" colspan="2">痛点</th>
+          <td class="data-cell s1 stage-start" data-step-col="0">
+            <div class="pain-item" data-step-role="role-a">提交申请时的痛点，以及造成的原因和结果</div>
+            <div class="pain-item" data-step-role="role-b">审批申请时的痛点，以及造成的原因和结果</div>
+          </td>
+          <td class="data-cell s1" data-step-col="1">
+            <div class="pain-item" data-step-role="role-a">审批周期长，无法及时了解进度</div>
+            <div class="pain-item" data-step-role="role-b">权限开通流程繁琐，涉及多个系统操作</div>
+          </td>
+          <td class="data-cell s1" data-step-col="2">
+            <div class="pain-item" data-step-role="role-a">资源规格选项太多，不知道如何选择最合适的配置</div>
+            <div class="pain-item" data-step-role="role-b">申请信息不完整或不规范，需要反复沟通确认</div>
+          </td>
+          <td class="data-cell s1" data-step-col="3">
+            <div class="pain-item" data-step-role="role-a">—</div>
+            <div class="pain-item" data-step-role="role-b">资源配额管理分散，难以全局把控</div>
+          </td>
+          <td class="data-cell s2 stage-start" data-step-col="4">
+            <div class="pain-item" data-step-role="role-a">数据来源分散，收集效率低</div>
+          </td>
+          <td class="data-cell s2" data-step-col="5">
+            <div class="pain-item" data-step-role="role-a">标注规范不清晰，标注质量参差不齐</div>
+          </td>
+          <td class="data-cell s2" data-step-col="6">
+            <div class="pain-item" data-step-role="role-a">数据质量校验耗时，缺乏自动化手段</div>
+          </td>
+          <td class="data-cell s3 stage-start" data-step-col="7">
+            <div class="pain-item" data-step-role="role-a">超参数组合太多，难以确定最优配置</div>
+            <div class="pain-item" data-step-role="role-b">缺少参数审核的checklist，容易遗漏合规项</div>
+          </td>
+          <td class="data-cell s3" data-step-col="8">
+            <div class="pain-item" data-step-role="role-a">训练任务排队时间长，资源分配不透明</div>
+            <div class="pain-item" data-step-role="role-b">审批请求与任务对应关系不清晰，追溯困难</div>
+          </td>
+          <td class="data-cell s3" data-step-col="9">
+            <div class="pain-item" data-step-role="role-a">训练日志信息量大，关键指标不突出</div>
+            <div class="pain-item" data-step-role="role-b">—</div>
+          </td>
+        </tr>
+
+        <tr class="row-sep"><th class="label-col" colspan="2"></th><td colspan="10"></td></tr>
+
+        <!-- ====== 需求 ====== -->
+        <tr>
+          <th class="label-col type-need" colspan="2">需求</th>
+          <td class="data-cell s1 stage-start" data-step-col="0">
+            <div class="need-item" data-step-role="role-a">需要明确的审批进度反馈，让申请人知道当前状态</div>
+            <div class="need-item" data-step-role="role-b">需要统一的权限管理平台，减少跨系统操作</div>
+          </td>
+          <td class="data-cell s1" data-step-col="1">
+            <div class="need-item" data-step-role="role-a">需要审批进度实时查询功能</div>
+            <div class="need-item" data-step-role="role-b">需要一键开通权限的能力</div>
+          </td>
+          <td class="data-cell s1" data-step-col="2">
+            <div class="need-item" data-step-role="role-a">需要配置推荐，帮助选择合适的资源规格</div>
+            <div class="need-item" data-step-role="role-b">需要标准化的申请模板，减少沟通成本</div>
+          </td>
+          <td class="data-cell s1" data-step-col="3">
+            <div class="need-item" data-step-role="role-a">—</div>
+            <div class="need-item" data-step-role="role-b">需要全局资源配额视图，便于管理和规划</div>
+          </td>
+          <td class="data-cell s2 stage-start" data-step-col="4">
+            <div class="need-item" data-step-role="role-a">需要统一的数据采集入口，提高收集效率</div>
+          </td>
+          <td class="data-cell s2" data-step-col="5">
+            <div class="need-item" data-step-role="role-a">需要清晰的标注规范和示例，提高标注质量</div>
+          </td>
+          <td class="data-cell s2" data-step-col="6">
+            <div class="need-item" data-step-role="role-a">需要自动化的数据质量校验工具</div>
+          </td>
+          <td class="data-cell s3 stage-start" data-step-col="7">
+            <div class="need-item" data-step-role="role-a">需要超参数推荐功能，减少调参时间</div>
+            <div class="need-item" data-step-role="role-b">需要参数审核checklist，确保合规性</div>
+          </td>
+          <td class="data-cell s3" data-step-col="8">
+            <div class="need-item" data-step-role="role-a">需要资源分配优先级设置，缩短排队时间</div>
+            <div class="need-item" data-step-role="role-b">需要审批请求与任务的关联追溯功能</div>
+          </td>
+          <td class="data-cell s3" data-step-col="9">
+            <div class="need-item" data-step-role="role-a">需要关键指标可视化，快速掌握训练状态</div>
+            <div class="need-item" data-step-role="role-b">—</div>
+          </td>
+        </tr>
+
+        <tr class="row-sep"><th class="label-col" colspan="2"></th><td colspan="10"></td></tr>
+
+        <!-- ====== 点子 ====== -->
+        <tr>
+          <th class="label-col type-idea" colspan="2">点子</th>
+          <td class="data-cell s1 stage-start" data-step-col="0">
+            <div class="idea-item" data-step-role="role-a">审批进度实时通知</div>
+            <div class="idea-item" data-step-role="role-b">统一权限管理平台</div>
+          </td>
+          <td class="data-cell s1" data-step-col="1">
+            <div class="idea-item" data-step-role="role-a">审批进度查询面板</div>
+            <div class="idea-item" data-step-role="role-b">权限一键开通</div>
+          </td>
+          <td class="data-cell s1" data-step-col="2">
+            <div class="idea-item" data-step-role="role-a">资源配置智能推荐</div>
+            <div class="idea-item" data-step-role="role-b">标准化申请模板</div>
+          </td>
+          <td class="data-cell s1" data-step-col="3">
+            <div class="idea-item" data-step-role="role-a">—</div>
+            <div class="idea-item" data-step-role="role-b">全局资源配额视图</div>
+          </td>
+          <td class="data-cell s2 stage-start" data-step-col="4">
+            <div class="idea-item" data-step-role="role-a">统一数据采集入口</div>
+          </td>
+          <td class="data-cell s2" data-step-col="5">
+            <div class="idea-item" data-step-role="role-a">标注规范示例库</div>
+          </td>
+          <td class="data-cell s2" data-step-col="6">
+            <div class="idea-item" data-step-role="role-a">数据质量自动校验</div>
+          </td>
+          <td class="data-cell s3 stage-start" data-step-col="7">
+            <div class="idea-item" data-step-role="role-a">超参数智能推荐</div>
+            <div class="idea-item" data-step-role="role-b">参数审核checklist</div>
+          </td>
+          <td class="data-cell s3" data-step-col="8">
+            <div class="idea-item" data-step-role="role-a">资源分配优先级管理</div>
+            <div class="idea-item" data-step-role="role-b">审批与任务关联追溯</div>
+          </td>
+          <td class="data-cell s3" data-step-col="9">
+            <div class="idea-item" data-step-role="role-a">训练关键指标可视化</div>
+            <div class="idea-item" data-step-role="role-b">—</div>
+          </td>
+        </tr>
+      </tbody>
+    </table>
+  </div>
+
+</main>
+
+<footer class="footer">
+  <p>用户旅程图 · 轻量化设计思维工具</p>
+</footer>
+
+<!-- Custom tooltip -->
+<div class="action-tooltip" id="actionTooltip">
+  <div class="tooltip-desc"></div>
+</div>
+
+<!-- Emotion tooltip -->
+<div class="emotion-tooltip" id="emotionTooltip">
+  <div class="et-score" id="etScore"></div>
+  <div id="etThinkContent"></div>
+  <div id="etPainContent"></div>
+</div>
+
+<script>
+// Mouse glow
+(function() {
+  const glow = document.createElement('div');
+  glow.className = 'mouse-glow';
+  document.body.appendChild(glow);
+  let mouseX = 0, mouseY = 0, glowX = 0, glowY = 0;
+  document.addEventListener('mousemove', (e) => { mouseX = e.clientX; mouseY = e.clientY; });
+  function animate() {
+    glowX += (mouseX - glowX) * 0.15;
+    glowY += (mouseY - glowY) * 0.15;
+    glow.style.left = glowX + 'px';
+    glow.style.top = glowY + 'px';
+    requestAnimationFrame(animate);
+  }
+  requestAnimationFrame(animate);
+})();
+
+// Column highlight: match by step-col AND step-role
+(function() {
+  const getStepCol = (el) => {
+    if (el.hasAttribute('data-step-col')) return el.getAttribute('data-step-col');
+    const td = el.closest('td[data-step-col]');
+    return td ? td.getAttribute('data-step-col') : null;
+  };
+  const getStepRole = (el) => el.getAttribute('data-step-role');
+
+  const highlightable = document.querySelectorAll('[data-step-role]');
+  highlightable.forEach(el => {
+    el.addEventListener('mouseenter', function() {
+      const col = getStepCol(this);
+      const role = getStepRole(this);
+      if (col === null || role === null) return;
+      highlightable.forEach(other => {
+        if (getStepCol(other) === col && getStepRole(other) === role) {
+          other.classList.add('col-highlight');
+          // also highlight parent td of think/pain items
+          const td = other.closest('td[data-step-col]');
+          if (td && !other.classList.contains('action-card')) td.classList.add('col-highlight');
+        }
+      });
+    });
+    el.addEventListener('mouseleave', function() {
+      highlightable.forEach(other => other.classList.remove('col-highlight'));
+      document.querySelectorAll('td.col-highlight').forEach(td => td.classList.remove('col-highlight'));
+    });
+  });
+})();
+
+// Custom tooltip for action cards (below mouse, no title)
+(function() {
+  const tooltip = document.getElementById('actionTooltip');
+  const descEl = tooltip.querySelector('.tooltip-desc');
+
+  document.querySelectorAll('.action-card').forEach(card => {
+    card.addEventListener('mouseenter', function(e) {
+      const desc = this.getAttribute('data-desc');
+      if (!desc) return;
+      descEl.textContent = desc;
+      tooltip.classList.add('visible');
+    });
+    card.addEventListener('mousemove', function(e) {
+      let x = e.clientX - tooltip.offsetWidth / 2;
+      let y = e.clientY + 16;
+      if (x < 10) x = 10;
+      if (x + tooltip.offsetWidth > window.innerWidth - 10) x = window.innerWidth - tooltip.offsetWidth - 10;
+      if (y + tooltip.offsetHeight > window.innerHeight - 10) y = e.clientY - tooltip.offsetHeight - 10;
+      tooltip.style.left = x + 'px';
+      tooltip.style.top = y + 'px';
+    });
+    card.addEventListener('mouseleave', function() {
+      tooltip.classList.remove('visible');
+    });
+  });
+})();
+
+// Cross-role vertical arrows: connect role A → role B actions in same column
+(function() {
+  const roleRows = document.querySelectorAll('tr:has(.type-role-action)');
+  if (roleRows.length < 2) return;
+  const rowA = roleRows[0];
+  const rowB = roleRows[1];
+  const cellsA = rowA.querySelectorAll('td');
+  const cellsB = rowB.querySelectorAll('td');
+  cellsA.forEach((cellA, i) => {
+    const cardA = cellA.querySelector('.action-card');
+    if (!cardA) return;
+    const cellB = cellsB[i];
+    if (!cellB) return;
+    const cardB = cellB.querySelector('.action-card');
+    if (cardB) {
+      const connector = document.createElement('span');
+      connector.className = 'role-connector';
+      cardA.appendChild(connector);
+    }
+  });
+})();
+
+// Hide role name when only one role in action rows
+(function() {
+  const roleRows = document.querySelectorAll('tr:has(.type-role-action)');
+  if (roleRows.length !== 2) {
+    if (roleRows.length === 1) {
+      const roleCol = roleRows[0].querySelector('.role-col');
+      if (roleCol) roleCol.style.display = 'none';
+      const labelCol = roleRows[0].querySelector('.label-col');
+      if (labelCol) labelCol.setAttribute('colspan', '2');
+    }
+    return;
+  }
+  
+  const rowA = roleRows[0];
+  const rowB = roleRows[1];
+  const cellsA = rowA.querySelectorAll('td');
+  const cellsB = rowB.querySelectorAll('td');
+  
+  let allCellsEmptyInB = true;
+  cellsB.forEach(cellB => {
+    if (cellB.querySelector('.action-card')) {
+      allCellsEmptyInB = false;
+    }
+  });
+  
+  if (allCellsEmptyInB) {
+    const roleColB = rowB.querySelector('.role-col');
+    if (roleColB) roleColB.style.display = 'none';
+    const roleColA = rowA.querySelector('.role-col');
+    if (roleColA) roleColA.style.display = 'none';
+    const labelCol = rowA.querySelector('.label-col');
+    if (labelCol) labelCol.setAttribute('colspan', '2');
+  }
+})();
+
+// Cross-cell horizontal arrows: connect adjacent action cards across td boundaries
+(function() {
+  const tableWrap = document.querySelector('.journey-table-wrap');
+  if (!tableWrap) return;
+  
+  let arrowOverlay = document.createElement('div');
+  arrowOverlay.className = 'arrow-overlay';
+  arrowOverlay.style.cssText = 'position:absolute;top:0;left:0;right:0;bottom:0;pointer-events:none;z-index:10;';
+  tableWrap.appendChild(arrowOverlay);
+  
+  function createArrowElement(width) {
+    const arrow = document.createElementNS('http://www.w3.org/2000/svg', 'svg');
+    arrow.setAttribute('width', width);
+    arrow.setAttribute('height', '12');
+    arrow.setAttribute('viewBox', `0 0 ${width} 12`);
+    arrow.style.position = 'absolute';
+    arrow.style.pointerEvents = 'none';
+    
+    const line = document.createElementNS('http://www.w3.org/2000/svg', 'line');
+    line.setAttribute('x1', '0');
+    line.setAttribute('y1', '6');
+    line.setAttribute('x2', width - 8);
+    line.setAttribute('y2', '6');
+    line.setAttribute('stroke', '#8b949e');
+    line.setAttribute('stroke-width', '2');
+    line.setAttribute('stroke-linecap', 'round');
+    
+    const polygon = document.createElementNS('http://www.w3.org/2000/svg', 'polygon');
+    polygon.setAttribute('points', `${width},6 ${width - 8},0 ${width - 8},12`);
+    polygon.setAttribute('fill', '#8b949e');
+    
+    arrow.appendChild(line);
+    arrow.appendChild(polygon);
+    return arrow;
+  }
+  
+  function drawCrossCellArrows() {
+    arrowOverlay.innerHTML = '';
+    const tableRect = tableWrap.getBoundingClientRect();
+    const actionRows = document.querySelectorAll('tbody tr:has(.action-card)');
+    
+    actionRows.forEach(row => {
+      const cards = Array.from(row.querySelectorAll('.action-card'));
+      for (let i = 0; i < cards.length - 1; i++) {
+        const card1 = cards[i];
+        const card2 = cards[i + 1];
+        const cell1 = card1.closest('td');
+        const cell2 = card2.closest('td');
+        if (!cell1 || !cell2 || cell1 === cell2) continue;
+        
+        const rect1 = card1.getBoundingClientRect();
+        const rect2 = card2.getBoundingClientRect();
+        
+        const startX = rect1.right;
+        const endX = rect2.left;
+        const y = rect1.top + rect1.height / 2;
+        
+        const arrowWidth = endX - startX;
+        if (arrowWidth < 8) continue;
+        
+        const arrow = createArrowElement(arrowWidth);
+        arrow.style.left = (startX - tableRect.left) + 'px';
+        arrow.style.top = (y - tableRect.top - 6) + 'px';
+        
+        arrowOverlay.appendChild(arrow);
+      }
+    });
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', drawCrossCellArrows);
+  } else {
+    drawCrossCellArrows();
+  }
+  
+  window.addEventListener('resize', drawCrossCellArrows);
+  window.addEventListener('scroll', drawCrossCellArrows);
+})();
+
+// ========== EMOTION CURVE ==========
+// Renders inside <tableWrap> but positioned at the "所说/所想" th, 
+// so the curve appears to originate from the label cell. 
+// Points align with each data column. Think items hidden in DOM, 
+// shown only on hover over the curve dots.
+(function() {
+  const tableWrap = document.querySelector('.journey-table-wrap');
+  const thinkTh = document.querySelector('th.type-think');
+  if (!tableWrap || !thinkTh) return;
+  
+  const thinkRow = thinkTh.closest('tr');
+  
+  // ── Sentiment scoring dictionary ──
+  const NEGATIVE_KEYWORDS = [
+    '担心', '焦虑', '困惑', '不满', '失望', '沮丧', '烦躁', '愤怒',
+    '困难', '麻烦', '复杂', '繁琐', '不清晰', '不明确', '模糊',
+    '参差不齐', '耗时', '分散', '效率低', '效率低下', '缺乏',
+    '难以', '不透明', '过多', '遗漏', '不完整', '不规范',
+    '问题', '错误', '失败', '等待', '延误', '冗长', '麻烦',
+    '阻碍', '障碍', '不便', '难受', '头疼', '无奈', '被动',
+    '不知道', '不确定', '没办法', '不知道如何', '难以确定',
+    '不理想', '不足', '缺失', '不够', '限制', '约束'
+  ];
+  
+  const POSITIVE_KEYWORDS = [
+    '满意', '顺利', '便捷', '清晰', '高效', '自动', '快速',
+    '简单', '完善', '优秀', '流畅', '一致', '标准', '规范',
+    '透明', '及时', '准确', '方便', '轻松', '愉快', '开心',
+    '放心', '安心', '可靠', '稳定', '智能', '推荐', '一键',
+    '实时', '统一', '全面', '完整', '直观', '合理'
+  ];
+  
+  const SEVERITY_KEYWORDS = [
+    '繁琐', '参差不齐', '耗时', '分散', '效率低', '效率低下',
+    '缺乏', '难以', '不透明', '过多', '遗漏', '不完整', '不规范',
+    '困难', '麻烦', '复杂', '冗长', '阻碍', '不知道如何',
+    '难以确定', '不清晰'
+  ];
+
+  function countKeywords(text, keywords) {
+    let count = 0;
+    for (const kw of keywords) {
+      if (text.includes(kw)) count++;
+    }
+    return count;
+  }
+
+  function computeEmotionScore(colIndex) {
+    const thinkTd = document.querySelector(`.row-think td[data-step-col="${colIndex}"]`);
+    const thinkItems = thinkTd ? thinkTd.querySelectorAll('.think-item') : [];
+    
+    const painTd = document.querySelector(`.row-pain td[data-step-col="${colIndex}"]`);
+    const painItems = painTd ? painTd.querySelectorAll('.pain-item') : [];
+    
+    let score = 3.0;
+    
+    let painCount = 0;
+    let painSeverity = 0;
+    painItems.forEach(item => {
+      const text = item.textContent.trim();
+      if (text === '—' || text === '') return;
+      painCount++;
+      painSeverity += countKeywords(text, SEVERITY_KEYWORDS);
+    });
+    
+    if (painCount > 0) {
+      score -= painCount * 0.5;
+      score -= painSeverity * 0.3;
+    }
+    
+    let thinkNegCount = 0;
+    let thinkPosCount = 0;
+    thinkItems.forEach(item => {
+      const text = item.textContent.trim();
+      thinkNegCount += countKeywords(text, NEGATIVE_KEYWORDS);
+      thinkPosCount += countKeywords(text, POSITIVE_KEYWORDS);
+    });
+    
+    score -= thinkNegCount * 0.2;
+    score += thinkPosCount * 0.2;
+    
+    if (painCount > 0 && thinkNegCount > 0) score -= 0.3;
+    if (painCount > 0 && thinkPosCount > thinkNegCount) score += 0.2;
+    
+    return Math.max(1, Math.min(5, Math.round(score * 10) / 10));
+  }
+
+  function drawEmotionCurve() {
+    try {
+      // Remove old SVG
+      let svg = tableWrap.querySelector('svg.emotion-curve-svg');
+      if (svg) svg.remove();
+      
+      const thinkCells = thinkRow.querySelectorAll('td[data-step-col]');
+      if (thinkCells.length === 0) return;
+      
+      const wrapRect = tableWrap.getBoundingClientRect();
+      const thRect = thinkTh.getBoundingClientRect();
+      const tableWidth = tableWrap.scrollWidth || tableWrap.querySelector('table').offsetWidth;
+      
+      // Compute points (X = center of each td column, Y = relative to th's box)
+      const points = [];
+      thinkCells.forEach(td => {
+        const colIndex = parseInt(td.getAttribute('data-step-col'));
+        const score = computeEmotionScore(colIndex);
+        const tdRect = td.getBoundingClientRect();
+        
+        const x = tdRect.left - wrapRect.left + tdRect.width / 2;
+        const padding = 20;
+        const usableHeight = thRect.height - padding * 2;
+        const normalizedScore = (score - 1) / 4;
+        // Y is relative to SVG (SVG positioned at th's top, so 0 = th's top edge)
+        const y = padding + usableHeight * (1 - normalizedScore);
+        
+        points.push({ x, y, colIndex, score });
+      });
+      
+      if (points.length === 0) return;
+      
+      // Build SVG path data
+      let lineD = '', areaD = '';
+      points.forEach((p, i) => {
+        if (i === 0) {
+          lineD += `M${p.x},${p.y}`;
+          areaD += `M${p.x},${thRect.height}L${p.x},${p.y}`;
+        } else {
+          const prev = points[i - 1];
+          const cp1x = prev.x + (p.x - prev.x) / 3;
+          const cp2x = prev.x + (p.x - prev.x) * 2 / 3;
+          lineD += ` C${cp1x},${prev.y} ${cp2x},${p.y} ${p.x},${p.y}`;
+          areaD += ` C${cp1x},${prev.y} ${cp2x},${p.y} ${p.x},${p.y}`;
+        }
+      });
+      const last = points[points.length - 1];
+      areaD += ` L${last.x},${thRect.height} Z`;
+      
+      // Create SVG
+      const svgNS = 'http://www.w3.org/2000/svg';
+      svg = document.createElementNS(svgNS, 'svg');
+      svg.classList.add('emotion-curve-svg');
+      svg.setAttribute('width', tableWidth);
+      svg.setAttribute('height', thRect.height);
+      svg.style.cssText = `position:absolute;top:${thRect.top - wrapRect.top}px;left:0;overflow:visible;pointer-events:none;`;
+      
+      // Defs
+      const defs = document.createElementNS(svgNS, 'defs');
+      
+      const lg = document.createElementNS(svgNS, 'linearGradient');
+      lg.setAttribute('id', 'ecLineGrad'); lg.setAttribute('x1','0'); lg.setAttribute('y1','0'); lg.setAttribute('x2','1'); lg.setAttribute('y2','0');
+      [['0%','#78b8ff'],['30%','#4dc8ff'],['60%','#34d399'],['100%','#a78bfa']].forEach(([off, col]) => {
+        const s = document.createElementNS(svgNS, 'stop');
+        s.setAttribute('offset', off); s.setAttribute('stop-color', col);
+        lg.appendChild(s);
+      });
+      defs.appendChild(lg);
+      
+      const ag = document.createElementNS(svgNS, 'linearGradient');
+      ag.setAttribute('id', 'ecAreaGrad'); ag.setAttribute('x1','0'); ag.setAttribute('y1','0'); ag.setAttribute('x2','0'); ag.setAttribute('y2','1');
+      const s1 = document.createElementNS(svgNS, 'stop');
+      s1.setAttribute('offset','0%'); s1.setAttribute('stop-color','#78b8ff'); s1.setAttribute('stop-opacity','0.25');
+      ag.appendChild(s1);
+      const s2 = document.createElementNS(svgNS, 'stop');
+      s2.setAttribute('offset','100%'); s2.setAttribute('stop-color','#78b8ff'); s2.setAttribute('stop-opacity','0');
+      ag.appendChild(s2);
+      defs.appendChild(ag);
+      
+      svg.appendChild(defs);
+      
+      // Area
+      const area = document.createElementNS(svgNS, 'path');
+      area.setAttribute('d', areaD);
+      area.setAttribute('fill', 'url(#ecAreaGrad)');
+      svg.appendChild(area);
+      
+      // Line
+      const line = document.createElementNS(svgNS, 'path');
+      line.setAttribute('d', lineD);
+      line.setAttribute('fill', 'none');
+      line.setAttribute('stroke', 'url(#ecLineGrad)');
+      line.setAttribute('stroke-width', '2.5');
+      line.setAttribute('stroke-linecap', 'round');
+      line.setAttribute('stroke-linejoin', 'round');
+      line.style.filter = 'drop-shadow(0 0 6px rgba(120,184,255,0.4))';
+      svg.appendChild(line);
+      
+      // Dots & tooltip
+      const tooltip = document.getElementById('emotionTooltip');
+      const etScore = document.getElementById('etScore');
+      const etThink = document.getElementById('etThinkContent');
+      const etPain = document.getElementById('etPainContent');
+      const dotR = 6;
+      
+      points.forEach(p => {
+        const g = document.createElementNS(svgNS, 'g');
+        g.setAttribute('data-col', p.colIndex);
+        g.setAttribute('data-score', p.score);
+        g.style.cursor = 'pointer';
+        g.style.pointerEvents = 'auto';
+        
+        const outer = document.createElementNS(svgNS, 'circle');
+        outer.setAttribute('cx', p.x); outer.setAttribute('cy', p.y);
+        outer.setAttribute('r', dotR);
+        outer.setAttribute('fill', '#1a1d2e'); outer.setAttribute('stroke','#78b8ff');
+        outer.setAttribute('stroke-width','2');
+        outer.style.transition = 'all 0.2s ease';
+        g.appendChild(outer);
+        
+        const inner = document.createElementNS(svgNS, 'circle');
+        inner.setAttribute('cx', p.x); inner.setAttribute('cy', p.y);
+        inner.setAttribute('r', 3);
+        inner.setAttribute('fill', '#78b8ff');
+        inner.style.transition = 'all 0.2s ease';
+        g.appendChild(inner);
+        
+        const label = document.createElementNS(svgNS, 'text');
+        label.setAttribute('x', p.x); label.setAttribute('y', p.y + dotR + 14);
+        label.setAttribute('text-anchor', 'middle');
+        label.setAttribute('fill', '#8b949e');
+        label.setAttribute('font-size', '10');
+        label.setAttribute('font-weight', '600');
+        label.textContent = p.score;
+        g.appendChild(label);
+        
+        // Hover
+        g.addEventListener('mouseenter', function() {
+          const col = parseInt(this.getAttribute('data-col'));
+          const score = parseFloat(this.getAttribute('data-score'));
+          
+          outer.setAttribute('fill','#78b8ff');
+          outer.setAttribute('stroke','#4dc8ff');
+          outer.style.filter = 'drop-shadow(0 0 8px rgba(120,184,255,0.6))';
+          inner.setAttribute('fill','#fff');
+          label.setAttribute('fill','#4dc8ff');
+          
+          const thinkTd = document.querySelector(`.row-think td[data-step-col="${col}"]`);
+          const thinkItems = thinkTd ? thinkTd.querySelectorAll('.think-item') : [];
+          let thinkHTML = '';
+          thinkItems.forEach(item => {
+            const text = item.textContent.trim();
+            if (text) thinkHTML += `<div class="et-think">${text}</div>`;
+          });
+          
+          const painTd = document.querySelector(`.row-pain td[data-step-col="${col}"]`);
+          const painItems = painTd ? painTd.querySelectorAll('.pain-item') : [];
+          let painHTML = '';
+          painItems.forEach(item => {
+            const text = item.textContent.trim();
+            if (text && text !== '—') painHTML += `<div class="et-pain">${text}</div>`;
+          });
+          
+          let emotionLabel = '';
+          if (score >= 4.5) emotionLabel = '非常满意';
+          else if (score >= 3.5) emotionLabel = '比较满意';
+          else if (score >= 2.5) emotionLabel = '中性';
+          else if (score >= 1.5) emotionLabel = '不太满意';
+          else emotionLabel = '非常不满意';
+          
+          etScore.innerHTML = `${emotionLabel} <span style="font-size:14px;font-weight:400;">(${score}分)</span>`;
+          etThink.innerHTML = thinkHTML ? '<div class="et-section-label">所说/所想</div>' + thinkHTML : '';
+          etPain.innerHTML = painHTML ? '<div class="et-section-label">痛点</div>' + painHTML : '';
+          tooltip.classList.add('visible');
+        });
+        
+        g.addEventListener('mousemove', function(e) {
+          let tx = e.clientX - tooltip.offsetWidth / 2;
+          let ty = e.clientY + 16;
+          if (tx < 10) tx = 10;
+          if (tx + tooltip.offsetWidth > window.innerWidth - 10) tx = window.innerWidth - tooltip.offsetWidth - 10;
+          if (ty + tooltip.offsetHeight > window.innerHeight - 10) ty = e.clientY - tooltip.offsetHeight - 10;
+          tooltip.style.left = tx + 'px';
+          tooltip.style.top = ty + 'px';
+        });
+        
+        g.addEventListener('mouseleave', function() {
+          outer.setAttribute('fill','#1a1d2e');
+          outer.setAttribute('stroke','#78b8ff');
+          outer.style.filter = '';
+          inner.setAttribute('fill','#78b8ff');
+          label.setAttribute('fill','#8b949e');
+          tooltip.classList.remove('visible');
+        });
+        
+        svg.appendChild(g);
+      });
+      
+      tableWrap.appendChild(svg);
+    } catch(e) {
+      console.error('Emotion curve error:', e);
+    }
+  }
+  
+  if (document.readyState === 'loading') {
+    document.addEventListener('DOMContentLoaded', () => setTimeout(drawEmotionCurve, 100));
+  } else {
+    setTimeout(drawEmotionCurve, 100);
+  }
+  
+  window.addEventListener('resize', drawEmotionCurve);
+  tableWrap.addEventListener('scroll', drawEmotionCurve);
+})();
+</script>
+
+</body>
+</html>
